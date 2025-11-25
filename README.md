@@ -1,0 +1,3 @@
+# gluetypes
+
+Glue types together.

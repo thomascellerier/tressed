@@ -1,0 +1,6 @@
+# python
+__pycache__/
+
+# python package
+dist/
+src/gluetypes.egg-info/

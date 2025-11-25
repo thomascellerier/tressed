@@ -1,0 +1,33 @@
+[project]
+name = "gluetypes"
+authors = [
+  { name="Thomas Cellerier", email="thomascellerier@gmail.com" },
+]
+version = "0.0.1"
+description = "Glue types together"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.1",
+    "ruff>=0.14.6",
+    "ty>=0.0.1a27",
+]
+
+[tool.uv.build-backend]
+module-name = "gluetypes"
+module-root = "src"
+
+[tool.ruff]
+src = ["src"]
+
+[tool.ty.environment]
+root = ["./src"]
+
+[tool.pytest.ini_options]
+pythonpath = [
+  "src"
+]
+
