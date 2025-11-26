@@ -16,6 +16,7 @@ Repository = "https://github.com/thomascellerier/gluetypes.git"
 [dependency-groups]
 dev = [
     "pytest>=9.0.1",
+    "pytest-benchmark>=5.2.3",
     "ruff>=0.14.6",
     "ty>=0.0.1a27",
 ]

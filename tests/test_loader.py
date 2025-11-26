@@ -1,4 +1,5 @@
 import pytest
+from pytest_benchmark.fixture import BenchmarkFixture
 
 from gluetypes.loader import Loader
 from gluetypes.exceptions import GluetypesTypeError, GluetypesValueError
@@ -66,15 +67,24 @@ def test_load_homogeneous_tuple() -> None:
 
 
 def test_load_tuple() -> None:
-    loader = Loader(enable_specialization=True)
+    loader = Loader()
     assert loader.load([], tuple[()]) == ()
     assert loader.load([1], tuple[int]) == (1,)
     assert loader.load([1, True], tuple[int, bool]) == (1, True)
-    for _ in range(10):
-        assert loader.load([1, True, 1.1], tuple[int, bool, float]) == (1, True, 1.1)
+    assert loader.load([1, True, 1.1], tuple[int, bool, float]) == (1, True, 1.1)
 
     with pytest.raises(GluetypesValueError):
         loader.load([1, True, "foo"], tuple[int, bool, float])
+
+
+def test_load_tuple_benchmark(benchmark: BenchmarkFixture) -> None:
+    loader = Loader()
+    benchmark(loader.load, [1, True, 1.1], tuple[int, bool, float])
+
+
+def test_load_tuple_specialized_benchmark(benchmark: BenchmarkFixture) -> None:
+    loader = Loader(enable_specialization=True)
+    benchmark(loader.load, [1, True, 1.1], tuple[int, bool, float])
 
 
 def test_specialize_load_tuple() -> None:
