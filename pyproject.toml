@@ -9,6 +9,10 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = []
 
+[project.urls]
+Homepage = "https://github.com/thomascellerier/gluetypes"
+Repository = "https://github.com/thomascellerier/gluetypes.git"
+
 [dependency-groups]
 dev = [
     "pytest>=9.0.1",
