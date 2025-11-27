@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 
 __all__ = [
     "load_simple_scalar",
-    "load_simple_sequence",
+    "load_simple_collection",
     "load_tuple",
 ]
 
@@ -22,7 +22,7 @@ def load_simple_scalar[T](
     )
 
 
-def load_simple_sequence[T](
+def load_simple_collection[T](
     value: Any, type_form: type[T], type_path: TypePath, loader: LoaderProtocol
 ) -> T:
     from gluetypes.predicates import get_origin, get_args

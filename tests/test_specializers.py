@@ -26,3 +26,29 @@ def __specialized_fn(value, loader):
     exec(code, globals_, locals_)
     specialized_fn = locals_["__specialized_fn"]
     assert specialized_fn([1, 1.1, "foobar"], loader) == (1, 1.1, "foobar")
+
+
+def test_specialize_load_simple_collection() -> None:
+    from gluetypes.loader import Loader
+    from gluetypes.loader.specializers import specialize_load_simple_collection
+
+    code = specialize_load_simple_collection(set[int], ("foo", 0, "bar"))
+    assert (
+        code
+        == """\
+def __specialized_fn(value, loader):
+    _load = loader._load
+    return {
+        _load(item, int, ('foo', 0, 'bar', pos))
+        for pos, item
+        in enumerate(value)
+    }
+
+"""
+    )
+    loader = Loader()
+    globals_ = {}
+    locals_ = {}
+    exec(code, globals_, locals_)
+    specialized_fn = locals_["__specialized_fn"]
+    assert specialized_fn([1, 1, 1, 2, 3, 2, 3], loader) == {1, 2, 3}

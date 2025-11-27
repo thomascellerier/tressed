@@ -87,6 +87,16 @@ def test_load_tuple_specialized_benchmark(benchmark: BenchmarkFixture) -> None:
     benchmark(loader.load, [1, True, 1.1], tuple[int, bool, float])
 
 
+def test_load_set_benchmark(benchmark: BenchmarkFixture) -> None:
+    loader = Loader()
+    benchmark(loader.load, [1] * 30, set[int])
+
+
+def test_load_set_specialized_benchmark(benchmark: BenchmarkFixture) -> None:
+    loader = Loader(enable_specialization=True)
+    benchmark(loader.load, [1] * 30, set[int])
+
+
 def test_load_unknown_type() -> None:
     loader = Loader()
 

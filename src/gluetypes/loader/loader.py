@@ -31,7 +31,7 @@ def _default_type_loaders():
 
 
 def _default_type_mappers(specialize: bool) -> Mapping[TypePredicate, TypeLoaderFn]:
-    from gluetypes.loader.loaders import load_simple_sequence, load_tuple
+    from gluetypes.loader.loaders import load_simple_collection, load_tuple
     from gluetypes.predicates import (
         is_tuple,
         is_list,
@@ -40,22 +40,28 @@ def _default_type_mappers(specialize: bool) -> Mapping[TypePredicate, TypeLoader
         is_frozenset,
     )
 
+    load_tuple_ = load_tuple
+    load_simple_collection_ = load_simple_collection
     if specialize:
         from gluetypes.loader.specializer import SpecializingLoader
-        from gluetypes.loader.specializers import specialize_load_tuple
+        from gluetypes.loader.specializers import (
+            specialize_load_tuple,
+            specialize_load_simple_collection,
+        )
 
         load_tuple_ = SpecializingLoader(load_tuple, specialize_load_tuple)
-    else:
-        load_tuple_ = load_tuple
+        load_simple_collection_ = SpecializingLoader(
+            load_simple_collection, specialize_load_simple_collection
+        )
 
     # Note that the order matters as some predicates match several types,
     # put the most specific match first.
     return {
-        is_homogeneous_tuple: load_simple_sequence,
+        is_homogeneous_tuple: load_simple_collection_,
         is_tuple: load_tuple_,
-        is_list: load_simple_sequence,
-        is_set: load_simple_sequence,
-        is_frozenset: load_simple_sequence,
+        is_list: load_simple_collection_,
+        is_set: load_simple_collection_,
+        is_frozenset: load_simple_collection_,
     }
 
 
