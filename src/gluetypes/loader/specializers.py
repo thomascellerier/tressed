@@ -88,10 +88,9 @@ class Codegen:
     ) -> str:
         # TODO: Allocate identifiers!
         loaded_ident = f"{ident}_loaded"
-        type_path_str = repr((*type_path, type_path_item))
         # TODO: Handle type forms!
         self._emit_line(
-            f"{loaded_ident} = _load({ident}, {type_form.__qualname__}, {type_path_str})"
+            f"{loaded_ident} = _load({ident}, {type_form.__qualname__}, {_type_path_repr(*type_path, type_path_item)})"
         )
         return loaded_ident
 
@@ -158,6 +157,30 @@ def _generic_type_repr(origin: type, args: tuple[type, ...]) -> str:
     return f"{origin.__qualname__}[{args_str}]"
 
 
+class Ident:
+    __slots__ = ("name",)
+
+    def __init__(self, name: str) -> None:
+        self.name = name
+
+
+def _type_path_repr(*args: TypePathItem | Ident) -> str:
+    items = []
+    for arg in args:
+        match arg:
+            case Ident():
+                items.append(arg.name)
+            case _:
+                items.append(repr(arg))
+
+    match items:
+        case [item]:
+            # Special case for single item tuple
+            return f"({item},)"
+        case _:
+            return f"({', '.join(items)})"
+
+
 def specialize_load_simple_collection[T](
     type_form: type[T],
     type_path: TypePath,
@@ -187,9 +210,8 @@ def specialize_load_simple_collection[T](
     else:
         open, close = f"{origin.__qualname__}([", "])"
 
-    type_path_str = f"({', '.join(item for item in (*map(repr, type_path), 'pos'))})"
     codegen._emit(f"""{open}
-        {load_fn}(item, {_type_form_repr(arg_type_form)}, {type_path_str})
+        {load_fn}(item, {_type_form_repr(arg_type_form)}, {_type_path_repr(*type_path, Ident("pos"))})
         for pos, item
         in enumerate(value)
     {close}

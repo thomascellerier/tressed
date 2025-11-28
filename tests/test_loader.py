@@ -1,3 +1,5 @@
+import gc
+import sys
 from unittest.mock import call
 
 import pytest
@@ -101,6 +103,15 @@ def test_load_set_specialized_benchmark(benchmark: BenchmarkFixture) -> None:
 
 
 def test_load_unknown_type() -> None:
+    # Loading an unknown type will go through all the predicates,
+    # make sure the predicates do not load any additional modules.
+    if "dataclasses" in sys.modules:
+        del sys.modules["dataclasses"]
+        gc.collect()
+
+    modules_before = frozenset(sys.modules.keys())
+    assert "dataclasses" not in modules_before
+
     loader = Loader()
 
     class MadeupType:
@@ -108,6 +119,17 @@ def test_load_unknown_type() -> None:
 
     with pytest.raises(GluetypesTypeError):
         loader.load(1, MadeupType)
+
+    modules_after = frozenset(sys.modules.keys())
+    new_modules = frozenset(
+        {
+            module
+            for module in modules_after - modules_after
+            # Ignore internal modules
+            if not module.startswith("gluetypes.")
+        }
+    )
+    assert new_modules == frozenset()
 
 
 def test_load_dataclass(mocker: MockerFixture) -> None:
