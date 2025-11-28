@@ -27,7 +27,7 @@ module-name = "gluetypes"
 module-root = "src"
 
 [tool.ruff]
-src = ["src"]
+src = ["src", "tests"]
 
 [tool.ty.environment]
 root = ["./src"]

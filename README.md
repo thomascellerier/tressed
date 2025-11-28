@@ -2,6 +2,52 @@
 
 Glue types together.
 
+## Usage
+
+```Python
+from dataclasses import dataclass, field
+from gluetypes.loader import Loader
+
+@dataclass
+class SomeDataclass:
+    foo: str
+    bar: str = "bar"
+    baz: list[int] = field(default_factory=lambda: [1, 2, 3])
+    bar_bar: tuple[int, str] = field(metadata={"alias": "barBar"}, kw_only=True)
+
+value = {
+    "foo": "foo",
+    "barBar": (2, "humbug"),
+}
+
+loader = Loader()
+loaded = loader.load(value, SomeDataclass)
+
+assert loaded == SomeDataclass(
+    foo="foo",
+    bar="bar",
+    baz=[1, 2, 3],
+    bar_bar=(2, "humbug"),
+)
+```
+
+## Supported types
+
+The following types are supported out of the box:
+
+- bool
+- int
+- float
+- str
+- tuple[T1, ..., Tn], typing.Tuple[T1, ..., Tn]
+- tuple[T, ...], typing.Tuple[T, ...] a.k.a homogeneous tuple
+- list[T], typing.List[T]
+- set[T], typing.Set[T]
+- frozenset[T], typing.FrozenSet[T]
+- dataclasses.dataclass
+
+It is easy to add support for custom types as needed when creating a loader.
+
 ## Installation
 
 Using pip:
