@@ -3,7 +3,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
     from typing import Final
 
-    from gluetypes.loader.types import TypePath, TypeLoaderFn, TypePathItem
+    from gluetypes.loader.types import TypeLoaderFn, TypePath, TypePathItem
 
 __all__ = [
     "specialize_load_tuple",
@@ -138,6 +138,26 @@ def specialize_load_tuple[T](
     return codegen.code()
 
 
+def _type_form_repr(type_form) -> str:
+    from gluetypes.predicates import get_args, get_origin
+
+    origin = get_origin(type_form)
+    if origin is not None:
+        args = get_args(type_form)
+        assert args is not None
+        return _generic_type_repr(origin, args)
+
+    return type_form.__qualname__
+
+
+def _generic_type_repr(origin: type, args: tuple[type, ...]) -> str:
+    if len(args) == 0:
+        args_str = "()"
+    else:
+        args_str = ", ".join(map(_type_form_repr, args))
+    return f"{origin.__qualname__}[{args_str}]"
+
+
 def specialize_load_simple_collection[T](
     type_form: type[T],
     type_path: TypePath,
@@ -169,7 +189,7 @@ def specialize_load_simple_collection[T](
 
     type_path_str = f"({', '.join(item for item in (*map(repr, type_path), 'pos'))})"
     codegen._emit(f"""{open}
-        {load_fn}(item, {arg_type_form.__qualname__}, {type_path_str})
+        {load_fn}(item, {_type_form_repr(arg_type_form)}, {type_path_str})
         for pos, item
         in enumerate(value)
     {close}

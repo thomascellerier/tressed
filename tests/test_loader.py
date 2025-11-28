@@ -1,8 +1,11 @@
+from unittest.mock import call
+
 import pytest
 from pytest_benchmark.fixture import BenchmarkFixture
+from pytest_mock import MockerFixture
 
-from gluetypes.loader import Loader
 from gluetypes.exceptions import GluetypesTypeError, GluetypesValueError
+from gluetypes.loader import Loader
 
 
 def test_load_simple_scalar() -> None:
@@ -89,12 +92,12 @@ def test_load_tuple_specialized_benchmark(benchmark: BenchmarkFixture) -> None:
 
 def test_load_set_benchmark(benchmark: BenchmarkFixture) -> None:
     loader = Loader()
-    benchmark(loader.load, [1] * 30, set[int])
+    benchmark(loader.load, [[1, "two", 3.3]] * 30, set[tuple[int, str, float]])
 
 
 def test_load_set_specialized_benchmark(benchmark: BenchmarkFixture) -> None:
     loader = Loader(enable_specialization=True)
-    benchmark(loader.load, [1] * 30, set[int])
+    benchmark(loader.load, [[1, "two", 3.3]] * 30, set[tuple[int, str, float]])
 
 
 def test_load_unknown_type() -> None:
@@ -105,3 +108,59 @@ def test_load_unknown_type() -> None:
 
     with pytest.raises(GluetypesTypeError):
         loader.load(1, MadeupType)
+
+
+def test_load_dataclass(mocker: MockerFixture) -> None:
+    from dataclasses import dataclass, field
+
+    @dataclass
+    class SomeDataclass:
+        foo: str
+        bar: str = "bar"
+        baz: list[int] = field(default_factory=lambda: [1, 2, 3])
+        bar_bar: tuple[int, str] = field(metadata={"alias": "barBar"}, kw_only=True)
+
+    value = {
+        "foo": "foo",
+        "barBar": (2, "humbug"),
+    }
+    expected = SomeDataclass(
+        foo="foo",
+        bar="bar",
+        baz=[1, 2, 3],
+        bar_bar=(2, "humbug"),
+    )
+    expected_cache = {
+        (SomeDataclass, (), "foo"): "foo",
+        (SomeDataclass, (), "bar"): "bar",
+        (SomeDataclass, (), "baz"): "baz",
+        (SomeDataclass, (), "bar_bar"): "barBar",
+    }
+
+    loader = Loader()
+
+    spy_resolve_alias = mocker.spy(loader, loader._resolve_alias.__name__)
+    spy_resolve_alias_no_cache = mocker.spy(
+        loader, loader._resolve_alias_no_cache.__name__
+    )
+
+    assert loader.load(value, SomeDataclass) == expected
+
+    # First, call make sure that the cache is created
+    assert loader._alias_cache == expected_cache
+
+    expected_calls = [
+        call(SomeDataclass, (), "foo"),
+        call(SomeDataclass, (), "bar"),
+        call(SomeDataclass, (), "baz"),
+        call(SomeDataclass, (), "bar_bar"),
+    ]
+    assert spy_resolve_alias.call_args_list == expected_calls
+    assert spy_resolve_alias_no_cache.call_args_list == expected_calls
+
+    assert loader.load(value, SomeDataclass) == expected
+
+    # Second, call make sure that the cache is used created
+    assert loader._alias_cache == expected_cache
+    assert spy_resolve_alias.call_args_list == expected_calls * 2
+    assert spy_resolve_alias_no_cache.call_args_list == expected_calls

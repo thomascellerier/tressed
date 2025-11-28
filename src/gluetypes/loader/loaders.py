@@ -3,12 +3,14 @@ from gluetypes.exceptions import GluetypesValueError
 TYPE_CHECKING = False
 if TYPE_CHECKING:
     from typing import Any
-    from gluetypes.loader.types import TypePath, LoaderProtocol
+
+    from gluetypes.loader.types import LoaderProtocol, TypePath
 
 __all__ = [
     "load_simple_scalar",
     "load_simple_collection",
     "load_tuple",
+    "load_dataclass",
 ]
 
 
@@ -25,7 +27,7 @@ def load_simple_scalar[T](
 def load_simple_collection[T](
     value: Any, type_form: type[T], type_path: TypePath, loader: LoaderProtocol
 ) -> T:
-    from gluetypes.predicates import get_origin, get_args
+    from gluetypes.predicates import get_args, get_origin
 
     origin = get_origin(type_form)
     num_expected_args = 2 if origin is tuple else 1
@@ -46,7 +48,7 @@ def load_simple_collection[T](
 def load_tuple[*Ts](
     value: Any, type_form: tuple[*Ts], type_path: TypePath, loader: LoaderProtocol
 ) -> tuple[*Ts]:
-    from gluetypes.predicates import get_origin, get_args
+    from gluetypes.predicates import get_args, get_origin
 
     origin = get_origin(type_form)
     args = get_args(type_form)
@@ -60,3 +62,19 @@ def load_tuple[*Ts](
         loader._load(item, args[pos], (*type_path, pos))
         for pos, item in enumerate(value)
     )
+
+
+def load_dataclass[T](
+    value: Any, type_form: type[T], type_path: TypePath, loader: LoaderProtocol
+) -> T:
+    from dataclasses import MISSING, fields
+
+    loaded = {}
+
+    for field in fields(type_form):
+        field_name = field.name
+        alias = loader._resolve_alias(type_form, type_path, field_name)
+        if (field_value := value.get(alias, MISSING)) is not MISSING:
+            loaded[field_name] = field_value
+
+    return type_form(**loaded)

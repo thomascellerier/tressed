@@ -32,14 +32,16 @@ def test_specialize_load_simple_collection() -> None:
     from gluetypes.loader import Loader
     from gluetypes.loader.specializers import specialize_load_simple_collection
 
-    code = specialize_load_simple_collection(set[int], ("foo", 0, "bar"))
+    code = specialize_load_simple_collection(
+        set[tuple[int, str, float]], ("foo", 0, "bar")
+    )
     assert (
         code
         == """\
 def __specialized_fn(value, loader):
     _load = loader._load
     return {
-        _load(item, int, ('foo', 0, 'bar', pos))
+        _load(item, tuple[int, str, float], ('foo', 0, 'bar', pos))
         for pos, item
         in enumerate(value)
     }
@@ -51,4 +53,6 @@ def __specialized_fn(value, loader):
     locals_ = {}
     exec(code, globals_, locals_)
     specialized_fn = locals_["__specialized_fn"]
-    assert specialized_fn([1, 1, 1, 2, 3, 2, 3], loader) == {1, 2, 3}
+    assert specialized_fn(
+        [[1, "two", 3.3], [4, "five", 5.5], [1, "two", 3.3]], loader
+    ) == {(1, "two", 3.3), (4, "five", 5.5)}

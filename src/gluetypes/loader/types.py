@@ -12,6 +12,9 @@ if TYPE_CHECKING:
         def _load[T](
             self, value: Any, type_form: type[T], type_path: TypePath
         ) -> T: ...
+        def _resolve_alias[T](
+            self, type_form: type[T], type_path: TypePath, name: str
+        ) -> str: ...
 
     type TypeLoaderFn[T] = Callable[[Any, type[T], TypePath, LoaderProtocol], T]
 

@@ -11,6 +11,7 @@ check-fmt:
 
 .PHONY: fmt
 fmt:
+	uv run ruff check --select I --fix
 	uv run ruff format
 
 .PHONY: pytest

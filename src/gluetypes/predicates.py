@@ -25,37 +25,42 @@ if TYPE_CHECKING:
     from collections.abc import Callable
     from typing import Any
 
-    # TODO: Use actual typing.TypeForm once it has made its way into python.
-    type TypeForm = Any
-
 __all__ = [
     "get_origin",
     "get_args",
-    "is_tuple",
-    "is_homogeneous_tuple",
-    "is_list",
-    "is_set",
+    "is_tuple_type",
+    "is_homogeneous_tuple_type",
+    "is_list_type",
+    "is_set_type",
+    "is_frozenset_type",
+    "is_dataclass_type",
 ]
 
 if TYPE_CHECKING:
-    type TypePredicate[T: type] = Callable[[T], bool]
+    # TODO: Use actual typing.TypeForm once it has made its way into python.
+    # Experimental support is coming in mypy 1.19, the PEP (747) is not accepted yet as of the time of writing.
+    type TypeForm = Any
+    type TypePredicate[T: TypeForm] = Callable[[T], bool]
 
-    __all__ += "TypePredicate"
+    __all__ += [
+        "TypeForm",
+        "TypePredicate",
+    ]
 
 
-def get_origin[T: TypeForm](type_form: T) -> type | None:
+def get_origin(type_form: TypeForm) -> type | None:
     # Avoid importing typing module if possible.
     # TODO: Handle annotated, generic etc...
     return getattr(type_form, "__origin__", None)
 
 
-def get_args[T: TypeForm](type_form: T) -> tuple[type, ...] | None:
+def get_args(type_form: TypeForm) -> tuple[type, ...] | None:
     # Avoid importing typing module if possible.
     # TODO: Handle annotated, generic etc...
     return getattr(type_form, "__args__", None)
 
 
-def is_homogeneous_tuple[T: type](type_form: T) -> bool:
+def is_homogeneous_tuple_type(type_form: TypeForm) -> bool:
     """
     The given type form matches tuple[T, ...] or typing.Tuple[T, ...]
     """
@@ -72,7 +77,7 @@ def is_homogeneous_tuple[T: type](type_form: T) -> bool:
     return False
 
 
-def is_tuple[T: type](type_form: T) -> bool:
+def is_tuple_type(type_form: TypeForm) -> bool:
     origin = get_origin(type_form)
     if origin is None:
         return False
@@ -83,7 +88,7 @@ def is_tuple[T: type](type_form: T) -> bool:
     return False
 
 
-def is_list[T: type](type_form: T) -> bool:
+def is_list_type(type_form: TypeForm) -> bool:
     origin = get_origin(type_form)
     if origin is None:
         return False
@@ -94,7 +99,7 @@ def is_list[T: type](type_form: T) -> bool:
     return False
 
 
-def is_set[T: type](type_form: T) -> bool:
+def is_set_type(type_form: TypeForm) -> bool:
     origin = get_origin(type_form)
     if origin is None:
         return False
@@ -105,7 +110,7 @@ def is_set[T: type](type_form: T) -> bool:
     return False
 
 
-def is_frozenset[T: type](type_form: T) -> bool:
+def is_frozenset_type(type_form: TypeForm) -> bool:
     origin = get_origin(type_form)
     if origin is None:
         return False
@@ -113,4 +118,11 @@ def is_frozenset[T: type](type_form: T) -> bool:
         return True
     if typing := sys.modules.get("typing"):
         return origin is typing.FrozenSet
+    return False
+
+
+def is_dataclass_type(type_form: TypeForm) -> bool:
+    if dataclasses := sys.modules.get("dataclasses"):
+        # We want to match only dataclass types, not instances
+        return dataclasses.is_dataclass(type_form) and isinstance(type_form, type)
     return False

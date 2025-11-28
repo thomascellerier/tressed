@@ -7,10 +7,10 @@ from gluetypes.exceptions import GluetypesTypeError, GluetypesValueError
 TYPE_CHECKING = False
 if TYPE_CHECKING:
     from collections.abc import Mapping
-    from typing import Any
+    from typing import Any, Final
 
-    from gluetypes.predicates import TypePredicate
     from gluetypes.loader.types import TypeLoaderFn, TypePath
+    from gluetypes.predicates import TypePredicate
 
 
 __all__ = [
@@ -31,13 +31,18 @@ def _default_type_loaders():
 
 
 def _default_type_mappers(specialize: bool) -> Mapping[TypePredicate, TypeLoaderFn]:
-    from gluetypes.loader.loaders import load_simple_collection, load_tuple
+    from gluetypes.loader.loaders import (
+        load_dataclass,
+        load_simple_collection,
+        load_tuple,
+    )
     from gluetypes.predicates import (
-        is_tuple,
-        is_list,
-        is_homogeneous_tuple,
-        is_set,
-        is_frozenset,
+        is_dataclass_type,
+        is_frozenset_type,
+        is_homogeneous_tuple_type,
+        is_list_type,
+        is_set_type,
+        is_tuple_type,
     )
 
     load_tuple_ = load_tuple
@@ -45,8 +50,8 @@ def _default_type_mappers(specialize: bool) -> Mapping[TypePredicate, TypeLoader
     if specialize:
         from gluetypes.loader.specializer import SpecializingLoader
         from gluetypes.loader.specializers import (
-            specialize_load_tuple,
             specialize_load_simple_collection,
+            specialize_load_tuple,
         )
 
         load_tuple_ = SpecializingLoader(load_tuple, specialize_load_tuple)
@@ -57,12 +62,16 @@ def _default_type_mappers(specialize: bool) -> Mapping[TypePredicate, TypeLoader
     # Note that the order matters as some predicates match several types,
     # put the most specific match first.
     return {
-        is_homogeneous_tuple: load_simple_collection_,
-        is_tuple: load_tuple_,
-        is_list: load_simple_collection_,
-        is_set: load_simple_collection_,
-        is_frozenset: load_simple_collection_,
+        is_homogeneous_tuple_type: load_simple_collection_,
+        is_tuple_type: load_tuple_,
+        is_list_type: load_simple_collection_,
+        is_set_type: load_simple_collection_,
+        is_frozenset_type: load_simple_collection_,
+        is_dataclass_type: load_dataclass,
     }
+
+
+type Alias = str
 
 
 class Loader:
@@ -71,6 +80,7 @@ class Loader:
         type_loaders: Mapping[type, TypeLoaderFn] | None = None,
         type_mappers: Mapping[TypePredicate, TypeLoaderFn] | None = None,
         enable_specialization: bool = False,
+        alias_field: str = "alias",
     ) -> None:
         # Map a type to its loader
         if type_loaders is None:
@@ -85,6 +95,32 @@ class Loader:
             )
         else:
             self._type_mappers = dict(type_mappers)
+
+        self._alias_field: Final = alias_field
+        # Mapping of (type, type_form, name) to alias
+        self._alias_cache: dict[tuple[type, TypePath, str], Alias] = {}
+
+    def _resolve_alias_no_cache[T](
+        self, type_form: type[T], type_path: TypePath, name: str
+    ) -> Alias:
+        # TODO: Also have a type mapper for alias resolvers
+        if fields := getattr(type_form, "__dataclass_fields__", None):
+            field = fields[name]
+            alias = field.metadata.get(self._alias_field)
+        if alias is None:
+            return name
+        return alias
+
+    def _resolve_alias[T](
+        self, type_form: type[T], type_path: TypePath, name: str
+    ) -> Alias:
+        cache_key = (type_form, type_path, name)
+        if (alias := self._alias_cache.get(cache_key)) is not None:
+            return alias
+
+        alias = self._resolve_alias_no_cache(type_form, type_path, name)
+        self._alias_cache[cache_key] = alias
+        return alias
 
     def _load[T](self, value: Any, type_form: type[T], type_path: TypePath) -> T:
         if (type_loader := self._type_loaders.get(type_form)) is None:
