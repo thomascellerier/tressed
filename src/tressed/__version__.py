@@ -9,5 +9,5 @@ def __getattr__(name: str) -> str:
     if name == "__version__":
         from importlib.metadata import version
 
-        return version("gluetypes")
-    raise AttributeError(f"Package 'gluetypes.__version__' has no attribute '{name}'")
+        return version("tressed")
+    raise AttributeError(f"Package 'tressed.__version__' has no attribute '{name}'")

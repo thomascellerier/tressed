@@ -3,7 +3,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
     from typing import Final
 
-    from gluetypes.loader.types import TypeLoaderFn, TypePath, TypePathItem
+    from tressed.loader.types import TypeLoaderFn, TypePath, TypePathItem
 
 __all__ = [
     "specialize_load_tuple",
@@ -121,7 +121,7 @@ def specialize_load_tuple[T](
     """
     Generate specialized function for given type at given path.
     """
-    from gluetypes.predicates import get_args
+    from tressed.predicates import get_args
 
     args = get_args(type_form)
     assert args is not None
@@ -138,7 +138,7 @@ def specialize_load_tuple[T](
 
 
 def _type_form_repr(type_form) -> str:
-    from gluetypes.predicates import get_args, get_origin
+    from tressed.predicates import get_args, get_origin
 
     origin = get_origin(type_form)
     if origin is not None:
@@ -188,7 +188,7 @@ def specialize_load_simple_collection[T](
     """
     Generate specialized function for given type at given path.
     """
-    from gluetypes.predicates import get_args, get_origin
+    from tressed.predicates import get_args, get_origin
 
     origin = get_origin(type_form)
     assert origin is not None

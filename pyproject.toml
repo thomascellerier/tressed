@@ -1,5 +1,5 @@
 [project]
-name = "gluetypes"
+name = "tressed"
 authors = [
   { name="Thomas Cellerier", email="thomascellerier@gmail.com" },
 ]
@@ -10,8 +10,8 @@ requires-python = ">=3.14"
 dependencies = []
 
 [project.urls]
-Homepage = "https://github.com/thomascellerier/gluetypes"
-Repository = "https://github.com/thomascellerier/gluetypes.git"
+Homepage = "https://github.com/thomascellerier/tressed"
+Repository = "https://github.com/thomascellerier/tressed.git"
 
 [dependency-groups]
 dev = [
@@ -23,7 +23,7 @@ dev = [
 ]
 
 [tool.uv.build-backend]
-module-name = "gluetypes"
+module-name = "tressed"
 module-root = "src"
 
 [tool.ruff]

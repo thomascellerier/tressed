@@ -2,15 +2,15 @@
 # TODO: Switch to TypeForm https://peps.python.org/pep-0747/ once available
 from __future__ import annotations
 
-from gluetypes.exceptions import GluetypesTypeError, GluetypesValueError
+from tressed.exceptions import TressedTypeError, TressedValueError
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
     from collections.abc import Mapping
     from typing import Any, Final
 
-    from gluetypes.loader.types import TypeLoaderFn, TypePath
-    from gluetypes.predicates import TypePredicate
+    from tressed.loader.types import TypeLoaderFn, TypePath
+    from tressed.predicates import TypePredicate
 
 
 __all__ = [
@@ -19,7 +19,7 @@ __all__ = [
 
 
 def _default_type_loaders():
-    from gluetypes.loader.loaders import load_simple_scalar
+    from tressed.loader.loaders import load_simple_scalar
 
     return {
         bool: load_simple_scalar,
@@ -31,12 +31,12 @@ def _default_type_loaders():
 
 
 def _default_type_mappers(specialize: bool) -> Mapping[TypePredicate, TypeLoaderFn]:
-    from gluetypes.loader.loaders import (
+    from tressed.loader.loaders import (
         load_dataclass,
         load_simple_collection,
         load_tuple,
     )
-    from gluetypes.predicates import (
+    from tressed.predicates import (
         is_dataclass_type,
         is_frozenset_type,
         is_homogeneous_tuple_type,
@@ -48,8 +48,8 @@ def _default_type_mappers(specialize: bool) -> Mapping[TypePredicate, TypeLoader
     load_tuple_ = load_tuple
     load_simple_collection_ = load_simple_collection
     if specialize:
-        from gluetypes.loader.specializer import SpecializingLoader
-        from gluetypes.loader.specializers import (
+        from tressed.loader.specializer import SpecializingLoader
+        from tressed.loader.specializers import (
             specialize_load_simple_collection,
             specialize_load_tuple,
         )
@@ -130,7 +130,7 @@ class Loader:
             else:
                 type_loader = None
             if type_loader is None:
-                raise GluetypesTypeError(
+                raise TressedTypeError(
                     f"Unhandled type form {type_form!r} at path {type_path!r} for value {value!r}"
                 )
 
@@ -139,10 +139,10 @@ class Loader:
 
         try:
             return type_loader(value, type_form, type_path, self)  # type: ignore[call-non-callable]
-        except GluetypesValueError:
+        except TressedValueError:
             raise
         except Exception as e:
-            error = GluetypesValueError(
+            error = TressedValueError(
                 f"Failed to load value {value!r} at path {type_path!r} into type form {type_form!r}"
             )
             error.add_note(f"{type(e)}: {e}")

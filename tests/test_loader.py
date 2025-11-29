@@ -6,8 +6,8 @@ import pytest
 from pytest_benchmark.fixture import BenchmarkFixture
 from pytest_mock import MockerFixture
 
-from gluetypes.exceptions import GluetypesTypeError, GluetypesValueError
-from gluetypes.loader import Loader
+from tressed.exceptions import TressedTypeError, TressedValueError
+from tressed.loader import Loader
 
 
 def test_load_simple_scalar() -> None:
@@ -19,7 +19,7 @@ def test_load_simple_scalar() -> None:
     assert loader.load("foo", str) == "foo"
     assert loader.load(None, type(None)) is None
 
-    with pytest.raises(GluetypesValueError):
+    with pytest.raises(TressedValueError):
         loader.load(1, str)
 
 
@@ -27,10 +27,10 @@ def test_load_list() -> None:
     loader = Loader()
     assert loader.load([1, 2, 3], list[int]) == [1, 2, 3]
 
-    with pytest.raises(GluetypesTypeError):
+    with pytest.raises(TressedTypeError):
         loader.load(["foo", "bar"], list)
 
-    with pytest.raises(GluetypesValueError):
+    with pytest.raises(TressedValueError):
         loader.load(["foo", "bar"], list[int])
 
 
@@ -40,10 +40,10 @@ def test_load_set() -> None:
     assert type(loaded) is set
     assert loaded == {1, 2, 3}
 
-    with pytest.raises(GluetypesTypeError):
+    with pytest.raises(TressedTypeError):
         loader.load(["foo", "bar"], set)
 
-    with pytest.raises(GluetypesValueError):
+    with pytest.raises(TressedValueError):
         loader.load(["foo", "bar"], set[int])
 
 
@@ -53,10 +53,10 @@ def test_load_frozenset() -> None:
     assert type(loaded) is frozenset
     assert loaded == frozenset({1, 2, 3})
 
-    with pytest.raises(GluetypesTypeError):
+    with pytest.raises(TressedTypeError):
         loader.load(["foo", "bar"], frozenset)
 
-    with pytest.raises(GluetypesValueError):
+    with pytest.raises(TressedValueError):
         loader.load(["foo", "bar"], frozenset[int])
 
 
@@ -64,10 +64,10 @@ def test_load_homogeneous_tuple() -> None:
     loader = Loader()
     assert loader.load([1, 2, 3], tuple[int, ...]) == (1, 2, 3)
 
-    with pytest.raises(GluetypesTypeError):
+    with pytest.raises(TressedTypeError):
         loader.load(["foo", "bar"], tuple)
 
-    with pytest.raises(GluetypesValueError):
+    with pytest.raises(TressedValueError):
         loader.load(["foo", "bar"], tuple[int, ...])
 
 
@@ -78,7 +78,7 @@ def test_load_tuple() -> None:
     assert loader.load([1, True], tuple[int, bool]) == (1, True)
     assert loader.load([1, True, 1.1], tuple[int, bool, float]) == (1, True, 1.1)
 
-    with pytest.raises(GluetypesValueError):
+    with pytest.raises(TressedValueError):
         loader.load([1, True, "foo"], tuple[int, bool, float])
 
 
@@ -117,7 +117,7 @@ def test_load_unknown_type() -> None:
     class MadeupType:
         pass
 
-    with pytest.raises(GluetypesTypeError):
+    with pytest.raises(TressedTypeError):
         loader.load(1, MadeupType)
 
     modules_after = frozenset(sys.modules.keys())
@@ -126,7 +126,7 @@ def test_load_unknown_type() -> None:
             module
             for module in modules_after - modules_after
             # Ignore internal modules
-            if not module.startswith("gluetypes.")
+            if not module.startswith("tressed.")
         }
     )
     assert new_modules == frozenset()

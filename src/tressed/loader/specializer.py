@@ -2,7 +2,7 @@ TYPE_CHECKING = False
 if TYPE_CHECKING:
     from typing import Any
 
-    from gluetypes.loader.types import LoaderProtocol, TypePath
+    from tressed.loader.types import LoaderProtocol, TypePath
 
 __all__ = ["SpecializingLoader"]
 

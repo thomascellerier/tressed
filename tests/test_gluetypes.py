@@ -3,9 +3,9 @@ import sys
 from pathlib import Path
 
 
-def test_import_gluetypes(tmp_path: Path) -> None:
+def test_import_tressed(tmp_path: Path) -> None:
     """
-    Make sure gluetypes uses lazy imports by default.
+    Make sure tressed uses lazy imports by default.
     Note that this is not fully reliable as pytest itself already loads a ton of modules.
     """
     prog = """\
@@ -18,7 +18,7 @@ def audit(event: str, args: tuple) -> None:
 
 sys.addaudithook(audit)
 
-import gluetypes
+import tressed
 """
     prog_path = tmp_path / "prog.py"
     prog_path.write_text(prog)
@@ -33,4 +33,4 @@ import gluetypes
     )
     loaded_modules = set(process.stdout.decode("utf-8").splitlines(keepends=False))
 
-    assert loaded_modules == {"gluetypes"}
+    assert loaded_modules == {"tressed"}

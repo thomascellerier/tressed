@@ -3,4 +3,4 @@ __pycache__/
 
 # python package
 dist/
-src/gluetypes.egg-info/
+src/tressed.egg-info/

@@ -12,7 +12,7 @@ wheels = [
 ]
 
 [[package]]
-name = "gluetypes"
+name = "tressed"
 version = "0.0.1"
 source = { virtual = "." }
 

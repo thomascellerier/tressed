@@ -1,6 +1,6 @@
 def test_specialize_load_tuple() -> None:
-    from gluetypes.loader import Loader
-    from gluetypes.loader.specializers import specialize_load_tuple
+    from tressed.loader import Loader
+    from tressed.loader.specializers import specialize_load_tuple
 
     code = specialize_load_tuple(tuple[int, float, str], ("foo", 1))
     assert (
@@ -29,8 +29,8 @@ def __specialized_fn(value, loader):
 
 
 def test_specialize_load_simple_collection() -> None:
-    from gluetypes.loader import Loader
-    from gluetypes.loader.specializers import specialize_load_simple_collection
+    from tressed.loader import Loader
+    from tressed.loader.specializers import specialize_load_simple_collection
 
     code = specialize_load_simple_collection(
         set[tuple[int, str, float]], ("foo", 0, "bar")

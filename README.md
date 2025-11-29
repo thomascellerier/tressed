@@ -1,12 +1,12 @@
-# gluetypes
+# tressed
 
-Glue types together.
+Serialize and deserialize types, in any order.
 
 ## Usage
 
 ```Python
 from dataclasses import dataclass, field
-from gluetypes.loader import Loader
+from tressed.loader import Loader
 
 @dataclass
 class SomeDataclass:
@@ -52,17 +52,17 @@ It is easy to add support for custom types as needed when creating a loader.
 
 Using pip:
 ```bash
-pip install gluetypes
+pip install tressed
 ```
 
 Or using uv:
 ```bash
-uv add gluetypes
+uv add tressed
 ```
 
-Then just import gluetypes and get coding.
+Then just import tressed and get coding.
 ```Python
-import gluetypes
+import tressed
 ```
 
 ## Goals
