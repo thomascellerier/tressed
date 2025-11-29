@@ -34,6 +34,7 @@ __all__ = [
     "is_set_type",
     "is_frozenset_type",
     "is_dataclass_type",
+    "is_newtype",
 ]
 
 if TYPE_CHECKING:
@@ -126,3 +127,16 @@ def is_dataclass_type(type_form: TypeForm) -> bool:
         # We want to match only dataclass types, not instances
         return dataclasses.is_dataclass(type_form) and isinstance(type_form, type)
     return False
+
+
+if sys.version_info >= (3, 10):
+
+    def is_newtype(type_form: TypeForm) -> bool:
+        if typing := sys.modules.get("typing"):
+            return type(type_form) is typing.NewType
+        return False
+else:
+    # NewType used to be a function, the only way to identify it
+    # was to check for the __supertype__ attribute.
+    def is_newtype(type_form: TypeForm) -> bool:
+        return hasattr(type_form, "__supertype__")
