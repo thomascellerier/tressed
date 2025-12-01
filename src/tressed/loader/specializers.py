@@ -1,7 +1,9 @@
 TYPE_CHECKING = False
 if TYPE_CHECKING:
     from collections.abc import Iterable
-    from typing import Final
+    from typing import Any, Final
+
+    from typing_extensions import TypeForm
 
     from tressed.loader.types import TypeLoaderFn, TypePath, TypePathItem
 
@@ -18,7 +20,7 @@ class Codegen:
         self.fn_name: Final = fn_name
         self.indent: Final = "    "
 
-        self._parts = []
+        self._parts: list[str] = []
         self._cached_code: str | None = None
 
     def code(self) -> str:
@@ -39,8 +41,8 @@ class Codegen:
 
     def exec(self) -> TypeLoaderFn:
         # NOTE: This relies on the source being executed being only trusted and validated inputs.
-        globals_ = {}
-        locals_ = {}
+        globals_: dict[str, Any] = {}
+        locals_: dict[str, Any] = {}
         exec(self.code(), globals_, locals_)
         return locals_[self.fn_name]
 
@@ -115,7 +117,7 @@ class Codegen:
 
 
 def specialize_load_tuple[T](
-    type_form: type[T],
+    type_form: TypeForm[T],
     type_path: TypePath,
 ) -> str | None:
     """
@@ -182,7 +184,7 @@ def _type_path_repr(*args: TypePathItem | Ident) -> str:
 
 
 def specialize_load_simple_collection[T](
-    type_form: type[T],
+    type_form: TypeForm[T],
     type_path: TypePath,
 ) -> str | None:
     """

@@ -2,22 +2,31 @@ TYPE_CHECKING = False
 if TYPE_CHECKING:
     from typing import Any
 
-    from tressed.loader.types import LoaderProtocol, TypePath
+    from typing_extensions import TypeForm
+
+    from tressed.loader.types import (
+        LoaderProtocol,
+        TypeLoaderFn,
+        TypeLoaderSpecializer,
+        TypePath,
+    )
 
 __all__ = ["SpecializingLoader"]
 
 
 class SpecializingLoader:
-    def __init__(self, loader, specializer) -> None:
+    def __init__(
+        self, loader: TypeLoaderFn, specializer: TypeLoaderSpecializer
+    ) -> None:
         self._loader = loader
-        self._specialized_loaders: dict = {}
+        self._specialized_loaders: dict[tuple[TypeForm, TypePath], Any] = {}
         self._specializer = specializer
         self._threshold: int = 3
 
     def __call__[T](
         self,
         value: Any,
-        type_form: type[T],
+        type_form: TypeForm[T],
         type_path: TypePath,
         loader: LoaderProtocol,
     ) -> T:
@@ -38,8 +47,8 @@ class SpecializingLoader:
                     # zero means we can't specialize this
                     self._specialized_loaders[key] = 0
                 else:
-                    globals_ = {}
-                    locals_ = {}
+                    globals_: dict[str, Any] = {}
+                    locals_: dict[str, Any] = {}
 
                     exec(specializer_fn_code, globals_, locals_)
 

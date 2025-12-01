@@ -18,17 +18,19 @@ __all__ = [
 
 
 def load_simple_scalar[T](
-    value: Any, type_form: type[T], type_path: TypePath, loader: LoaderProtocol
+    value: Any, type_form: TypeForm[T], type_path: TypePath, loader: LoaderProtocol
 ) -> T:
     if type(value) is type_form:
         return value
+    if (name := getattr(type_form, "__name__", None)) is None:
+        name = repr(type_form)
     raise TressedValueError(
-        f"Cannot to load value {value!r} at path {type_path!r} into {type_form.__name___}"
+        f"Cannot to load value {value!r} at path {type_path!r} into {name}"
     )
 
 
 def load_simple_collection[T](
-    value: Any, type_form: type[T], type_path: TypePath, loader: LoaderProtocol
+    value: Any, type_form: TypeForm[T], type_path: TypePath, loader: LoaderProtocol
 ) -> T:
     from tressed.predicates import get_args, get_origin
 
@@ -48,9 +50,9 @@ def load_simple_collection[T](
     )
 
 
-def load_tuple[*Ts](
-    value: Any, type_form: tuple[*Ts], type_path: TypePath, loader: LoaderProtocol
-) -> tuple[*Ts]:
+def load_tuple[T](
+    value: Any, type_form: TypeForm[T], type_path: TypePath, loader: LoaderProtocol
+) -> T:
     from tressed.predicates import get_args, get_origin
 
     origin = get_origin(type_form)
@@ -61,20 +63,20 @@ def load_tuple[*Ts](
             f"{getattr(type_form, '__name__', type_form)} is not a generic type"
         )
 
-    return tuple(
+    return tuple(  # type: ignore[return-value]
         loader._load(item, args[pos], (*type_path, pos))
         for pos, item in enumerate(value)
     )
 
 
 def load_dataclass[T](
-    value: Any, type_form: type[T], type_path: TypePath, loader: LoaderProtocol
+    value: Any, type_form: TypeForm[T], type_path: TypePath, loader: LoaderProtocol
 ) -> T:
     from dataclasses import MISSING, fields
 
     loaded = {}
 
-    for field in fields(type_form):
+    for field in fields(type_form):  # type: ignore[arg-type]
         field_name = field.name
         alias = loader._resolve_alias(type_form, type_path, field_name)
         if (field_value := value.get(alias, MISSING)) is not MISSING:

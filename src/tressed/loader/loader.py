@@ -82,14 +82,14 @@ type Alias = str
 class Loader:
     def __init__(
         self,
-        type_loaders: Mapping[type, TypeLoaderFn] | None = None,
+        type_loaders: Mapping[TypeForm, TypeLoaderFn] | None = None,
         type_mappers: Mapping[TypePredicate, TypeLoaderFn] | None = None,
         enable_specialization: bool = False,
         alias_field: str = "alias",
     ) -> None:
         # Map a type to its loader
         if type_loaders is None:
-            self._type_loaders: dict[type, TypeLoaderFn] = _default_type_loaders()
+            self._type_loaders: dict[TypeForm, TypeLoaderFn] = _default_type_loaders()
         else:
             self._type_loaders = dict(type_loaders)
 
@@ -117,7 +117,7 @@ class Loader:
         return alias
 
     def _resolve_alias[T](
-        self, type_form: TypeForm, type_path: TypePath, name: str
+        self, type_form: TypeForm[T], type_path: TypePath, name: str
     ) -> Alias:
         cache_key = (type_form, type_path, name)
         if (alias := self._alias_cache.get(cache_key)) is not None:
@@ -127,7 +127,7 @@ class Loader:
         self._alias_cache[cache_key] = alias
         return alias
 
-    def _load[T](self, value: Any, type_form: TypeForm, type_path: TypePath) -> T:
+    def _load[T](self, value: Any, type_form: TypeForm[T], type_path: TypePath) -> T:
         if (type_loader := self._type_loaders.get(type_form)) is None:
             for type_predicate, type_loader in self._type_mappers.items():
                 if type_predicate(type_form):
@@ -153,5 +153,5 @@ class Loader:
             error.add_note(f"{type(e)}: {e}")
             raise error from e
 
-    def load[T](self, value: Any, type_form: TypeForm) -> T:
+    def load[T](self, value: Any, type_form: TypeForm[T]) -> T:
         return self._load(value, type_form, ())

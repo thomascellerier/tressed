@@ -27,7 +27,7 @@ mypy:
 	uv run mypy --enable-incomplete-feature=TypeForm
 
 .PHONY: lint
-lint: ty-check ruff-check check-fmt
+lint: mypy ruff-check check-fmt
 
 .PHONY: test
 test: lint pytest
