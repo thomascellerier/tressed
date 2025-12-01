@@ -1,0 +1,22 @@
+name: Test tressed
+
+jobs:
+  test:
+    name: python
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6.0.0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7.1.4
+        with:
+          # Install a specific version of uv.
+          version: "0.9.13"
+
+      - name: Set up Python
+        run: uv python install
+
+      - name: Run test target
+        run: make test
+
