@@ -22,6 +22,10 @@ pytest:
 ty-check:
 	uv run ty check
 
+.PHONY: mypy
+mypy:
+	uv run mypy
+
 .PHONY: lint
 lint: ty-check ruff-check check-fmt
 
