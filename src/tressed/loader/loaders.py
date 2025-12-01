@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from tressed.loader.types import LoaderProtocol, TypePath
 
 __all__ = [
+    "load_identity",
     "load_simple_scalar",
     "load_simple_collection",
     "load_tuple",
@@ -17,9 +18,12 @@ __all__ = [
 ]
 
 
-def load_simple_scalar[T](
+def load_identity[T](
     value: Any, type_form: TypeForm[T], type_path: TypePath, loader: LoaderProtocol
 ) -> T:
+    """
+    Pass the value as is, given that it is of the expected type.
+    """
     if type(value) is type_form:
         return value
     if (name := getattr(type_form, "__name__", None)) is None:
@@ -27,6 +31,15 @@ def load_simple_scalar[T](
     raise TressedValueError(
         f"Cannot to load value {value!r} at path {type_path!r} into {name}"
     )
+
+
+def load_simple_scalar[T](
+    value: Any, type_form: TypeForm[T], type_path, loader: LoaderProtocol
+) -> T:
+    """
+    Construct an instance of the given type using the value as the sole argument.
+    """
+    return type_form(value)  # type: ignore[call-arg]
 
 
 def load_simple_collection[T](
@@ -79,9 +92,10 @@ def load_dataclass[T](
     for field in fields(type_form):  # type: ignore[arg-type]
         field_name = field.name
         alias = loader._resolve_alias(type_form, type_path, field_name)
+        if not field.init:
+            continue
         if (field_value := value.get(alias, MISSING)) is not MISSING:
             loaded[field_name] = field_value
-
     return type_form(**loaded)
 
 

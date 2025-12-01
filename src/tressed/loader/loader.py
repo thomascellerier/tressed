@@ -21,14 +21,14 @@ __all__ = [
 
 
 def _default_type_loaders():
-    from tressed.loader.loaders import load_simple_scalar
+    from tressed.loader.loaders import load_identity
 
     return {
-        bool: load_simple_scalar,
-        int: load_simple_scalar,
-        float: load_simple_scalar,
-        str: load_simple_scalar,
-        type(None): load_simple_scalar,
+        bool: load_identity,
+        int: load_identity,
+        float: load_identity,
+        str: load_identity,
+        type(None): load_identity,
     }
 
 
@@ -37,12 +37,14 @@ def _default_type_mappers(specialize: bool) -> Mapping[TypePredicate, TypeLoader
         load_dataclass,
         load_newtype,
         load_simple_collection,
+        load_simple_scalar,
         load_tuple,
     )
     from tressed.predicates import (
         is_dataclass_type,
         is_frozenset_type,
         is_homogeneous_tuple_type,
+        is_ipaddress_type,
         is_list_type,
         is_newtype,
         is_set_type,
@@ -73,6 +75,7 @@ def _default_type_mappers(specialize: bool) -> Mapping[TypePredicate, TypeLoader
         is_frozenset_type: load_simple_collection_,
         is_dataclass_type: load_dataclass,
         is_newtype: load_newtype,
+        is_ipaddress_type: load_simple_scalar,
     }
 
 

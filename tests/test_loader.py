@@ -11,7 +11,7 @@ from tressed.exceptions import TressedTypeError, TressedValueError
 from tressed.loader import Loader
 
 
-def test_load_simple_scalar() -> None:
+def test_load_identity() -> None:
     loader = Loader()
     assert loader.load(1, int) == 1
     assert loader.load(1.1, float) == 1.1
@@ -91,6 +91,14 @@ def test_load_newtype() -> None:
     assert_type(loaded, T)
 
     assert loaded == T(123)
+
+
+def test_load_ipaddress() -> None:
+    import ipaddress
+
+    loader = Loader()
+    loaded = loader.load("127.0.0.1", ipaddress.IPv4Address)
+    assert_type(loaded, ipaddress.IPv4Address)
 
 
 def test_load_tuple_benchmark(benchmark: BenchmarkFixture) -> None:

@@ -46,6 +46,7 @@ The following types are supported out of the box:
 - frozenset[T], typing.FrozenSet[T]
 - dataclasses.dataclass
 - typing.NewType[T]
+- ipaddress.{IPv4Address,IPv6Address,IPv4Interface,IPv6Interface,IPv4Network,IPv6Network}
 
 It is easy to add support for custom types as needed when creating a loader.
 

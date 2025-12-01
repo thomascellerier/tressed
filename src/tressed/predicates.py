@@ -140,3 +140,16 @@ else:
     # was to check for the __supertype__ attribute.
     def is_newtype(type_form: TypeForm) -> bool:
         return hasattr(type_form, "__supertype__")
+
+
+def is_ipaddress_type(type_form: TypeForm) -> bool:
+    if ipaddress := sys.modules.get("ipaddress"):
+        return type_form in {
+            ipaddress.IPv4Address,
+            ipaddress.IPv6Address,
+            ipaddress.IPv4Interface,
+            ipaddress.IPv6Interface,
+            ipaddress.IPv4Network,
+            ipaddress.IPv6Network,
+        }
+    return False
