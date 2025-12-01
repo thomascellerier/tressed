@@ -2,6 +2,8 @@
 # TODO: Switch to TypeForm https://peps.python.org/pep-0747/ once available
 from __future__ import annotations
 
+from typing_extensions import TypeForm
+
 from tressed.exceptions import TressedTypeError, TressedValueError
 
 TYPE_CHECKING = False
@@ -33,6 +35,7 @@ def _default_type_loaders():
 def _default_type_mappers(specialize: bool) -> Mapping[TypePredicate, TypeLoaderFn]:
     from tressed.loader.loaders import (
         load_dataclass,
+        load_newtype,
         load_simple_collection,
         load_tuple,
     )
@@ -41,6 +44,7 @@ def _default_type_mappers(specialize: bool) -> Mapping[TypePredicate, TypeLoader
         is_frozenset_type,
         is_homogeneous_tuple_type,
         is_list_type,
+        is_newtype,
         is_set_type,
         is_tuple_type,
     )
@@ -68,6 +72,7 @@ def _default_type_mappers(specialize: bool) -> Mapping[TypePredicate, TypeLoader
         is_set_type: load_simple_collection_,
         is_frozenset_type: load_simple_collection_,
         is_dataclass_type: load_dataclass,
+        is_newtype: load_newtype,
     }
 
 
@@ -98,10 +103,10 @@ class Loader:
 
         self._alias_field: Final = alias_field
         # Mapping of (type, type_form, name) to alias
-        self._alias_cache: dict[tuple[type, TypePath, str], Alias] = {}
+        self._alias_cache: dict[tuple[TypeForm, TypePath, str], Alias] = {}
 
     def _resolve_alias_no_cache[T](
-        self, type_form: type[T], type_path: TypePath, name: str
+        self, type_form: TypeForm, type_path: TypePath, name: str
     ) -> Alias:
         # TODO: Also have a type mapper for alias resolvers
         if fields := getattr(type_form, "__dataclass_fields__", None):
@@ -112,7 +117,7 @@ class Loader:
         return alias
 
     def _resolve_alias[T](
-        self, type_form: type[T], type_path: TypePath, name: str
+        self, type_form: TypeForm, type_path: TypePath, name: str
     ) -> Alias:
         cache_key = (type_form, type_path, name)
         if (alias := self._alias_cache.get(cache_key)) is not None:
@@ -122,7 +127,7 @@ class Loader:
         self._alias_cache[cache_key] = alias
         return alias
 
-    def _load[T](self, value: Any, type_form: type[T], type_path: TypePath) -> T:
+    def _load[T](self, value: Any, type_form: TypeForm, type_path: TypePath) -> T:
         if (type_loader := self._type_loaders.get(type_form)) is None:
             for type_predicate, type_loader in self._type_mappers.items():
                 if type_predicate(type_form):
@@ -138,7 +143,7 @@ class Loader:
             self._type_loaders[type_form] = type_loader
 
         try:
-            return type_loader(value, type_form, type_path, self)  # type: ignore[call-non-callable]
+            return type_loader(value, type_form, type_path, self)
         except TressedValueError:
             raise
         except Exception as e:
@@ -148,5 +153,5 @@ class Loader:
             error.add_note(f"{type(e)}: {e}")
             raise error from e
 
-    def load[T](self, value: Any, type_form: type[T]) -> T:
+    def load[T](self, value: Any, type_form: TypeForm) -> T:
         return self._load(value, type_form, ())

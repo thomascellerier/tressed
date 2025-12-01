@@ -21,8 +21,8 @@ def __specialized_fn(value, loader):
 """
     )
     loader = Loader()
-    globals_ = {}
-    locals_ = {}
+    globals_: dict = {}
+    locals_: dict = {}
     exec(code, globals_, locals_)
     specialized_fn = locals_["__specialized_fn"]
     assert specialized_fn([1, 1.1, "foobar"], loader) == (1, 1.1, "foobar")
@@ -49,8 +49,8 @@ def __specialized_fn(value, loader):
 """
     )
     loader = Loader()
-    globals_ = {}
-    locals_ = {}
+    globals_: dict = {}
+    locals_: dict = {}
     exec(code, globals_, locals_)
     specialized_fn = locals_["__specialized_fn"]
     assert specialized_fn(

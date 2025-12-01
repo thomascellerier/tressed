@@ -1,5 +1,6 @@
 import gc
 import sys
+from typing import NewType, assert_type
 from unittest.mock import call
 
 import pytest
@@ -80,6 +81,16 @@ def test_load_tuple() -> None:
 
     with pytest.raises(TressedValueError):
         loader.load([1, True, "foo"], tuple[int, bool, float])
+
+
+def test_load_newtype() -> None:
+    T = NewType("T", int)
+
+    loader = Loader()
+    loaded = loader.load(123, T)
+    assert_type(loaded, T)
+
+    assert loaded == T(123)
 
 
 def test_load_tuple_benchmark(benchmark: BenchmarkFixture) -> None:

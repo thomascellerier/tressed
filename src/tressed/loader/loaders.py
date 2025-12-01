@@ -4,6 +4,8 @@ TYPE_CHECKING = False
 if TYPE_CHECKING:
     from typing import Any
 
+    from typing_extensions import TypeForm
+
     from tressed.loader.types import LoaderProtocol, TypePath
 
 __all__ = [
@@ -11,6 +13,7 @@ __all__ = [
     "load_simple_collection",
     "load_tuple",
     "load_dataclass",
+    "load_newtype",
 ]
 
 
@@ -78,3 +81,10 @@ def load_dataclass[T](
             loaded[field_name] = field_value
 
     return type_form(**loaded)
+
+
+def load_newtype[T: TypeForm](
+    value: Any, type_form: T, type_path: TypePath, loader: LoaderProtocol
+) -> T:
+    supertype = getattr(type_form, "__supertype__")
+    return loader._load(value, supertype, type_path)

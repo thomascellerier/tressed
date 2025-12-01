@@ -45,6 +45,7 @@ The following types are supported out of the box:
 - set[T], typing.Set[T]
 - frozenset[T], typing.FrozenSet[T]
 - dataclasses.dataclass
+- typing.NewType[T]
 
 It is easy to add support for custom types as needed when creating a loader.
 
