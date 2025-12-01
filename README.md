@@ -44,6 +44,8 @@ The following types are supported out of the box:
 - list[T], typing.List[T]
 - set[T], typing.Set[T]
 - frozenset[T], typing.FrozenSet[T]
+- dict[K, V], typing.Dict[K, V]
+- typing.TypedDict, typing\_extensions.TypedDict, including support for PEP 728 closed and extra\_items.
 - dataclasses.dataclass
 - typing.NewType[T]
 - ipaddress.{IPv4Address,IPv6Address,IPv4Interface,IPv6Interface,IPv4Network,IPv6Network}

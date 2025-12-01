@@ -205,3 +205,95 @@ def test_load_dataclass(mocker: MockerFixture) -> None:
     assert loader._alias_cache == expected_cache
     assert spy_resolve_alias.call_args_list == expected_calls * 2
     assert spy_resolve_alias_no_cache.call_args_list == expected_calls
+
+
+def test_load_dict() -> None:
+    loader = Loader()
+
+    loaded = loader.load({"foo": [1, 2], "bar": [5, 6, 6, 8]}, dict[str, set[int]])
+    assert_type(loaded, dict[str, set[int]])
+    assert loaded == {
+        "foo": {1, 2},
+        "bar": {5, 6, 8},
+    }
+
+
+def test_load_legacy_dict() -> None:
+    from typing import Dict
+
+    loader = Loader()
+
+    loaded = loader.load({"foo": [1, 2], "bar": [5, 6, 6, 8]}, Dict[str, set[int]])
+    assert_type(loaded, dict[str, set[int]])
+    assert loaded == {
+        "foo": {1, 2},
+        "bar": {5, 6, 8},
+    }
+
+
+def test_load_typeddict() -> None:
+    from typing import TypedDict
+
+    loader = Loader()
+
+    class SomeTypedDict(TypedDict):
+        foo: int
+        bar: str
+
+    loaded = loader.load({"foo": 123, "bar": "BAR"}, SomeTypedDict)
+    assert_type(loaded, SomeTypedDict)
+    assert loaded == {"foo": 123, "bar": "BAR"}
+
+
+def test_load_typeddict_optional_keys() -> None:
+    from typing import TypedDict
+
+    loader = Loader()
+
+    class SomeTypedDict(TypedDict, total=False):
+        foo: int
+        bar: str
+
+    loaded = loader.load({"foo": 123}, SomeTypedDict)
+    assert_type(loaded, SomeTypedDict)
+    assert loaded == {"foo": 123}
+
+    loaded = loader.load({"foo": 123, "bar": "BAR", "baz": "BAZ"}, SomeTypedDict)
+    assert_type(loaded, SomeTypedDict)
+    assert loaded == {"foo": 123, "bar": "BAR", "baz": "BAZ"}
+
+
+def test_load_typeddict_closed() -> None:
+    from typing_extensions import TypedDict
+
+    loader = Loader()
+
+    class SomeTypedDict(TypedDict, closed=True):  # type: ignore[call-arg]
+        foo: int
+
+    with pytest.raises(TressedValueError) as exc_info:
+        loader.load(
+            {"foo": 123, "bar": "bar", "buz": "BUZ", "baz": "BAZ"}, SomeTypedDict
+        )
+
+    assert (
+        str(exc_info.value)
+        == "Failed to load value of type dict into SomeTypedDict at path ., extra keys 'bar', 'baz', 'buz': {'foo': 123, 'bar': 'bar', 'buz': 'BUZ', 'baz': 'BAZ'}"
+    )
+
+
+def test_load_typeddict_extra_items() -> None:
+    from typing_extensions import TypedDict
+
+    loader = Loader()
+
+    class SomeTypedDict(TypedDict, extra_items=str):  # type: ignore[call-arg]
+        foo: int
+        bar: str
+        baz: str
+
+    loaded = loader.load(
+        {"foo": 123, "bar": "bar", "buz": "BUZ", "baz": "BAZ"}, SomeTypedDict
+    )
+    assert_type(loaded, SomeTypedDict)
+    assert loaded == {"foo": 123, "bar": "bar", "buz": "BUZ", "baz": "BAZ"}

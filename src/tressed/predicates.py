@@ -35,6 +35,8 @@ __all__ = [
     "is_frozenset_type",
     "is_dataclass_type",
     "is_newtype",
+    "is_typeddict",
+    "is_dict_type",
 ]
 
 if TYPE_CHECKING:
@@ -152,4 +154,23 @@ def is_ipaddress_type(type_form: TypeForm) -> bool:
             ipaddress.IPv4Network,
             ipaddress.IPv6Network,
         }
+    return False
+
+
+def is_typeddict(type_form: TypeForm) -> bool:
+    if typing := sys.modules.get("typing"):
+        if typing.is_typeddict(type_form):
+            return True
+    if typing_extensions := sys.modules.get("typing_extensions"):
+        if typing_extensions.is_typeddict(type_form):
+            return True
+    return False
+
+
+def is_dict_type(type_form: TypeForm) -> bool:
+    origin = get_origin(type_form)
+    if origin is dict:
+        return True
+    elif (typing := sys.modules.get("typing")) and origin is typing.Dict:
+        return True
     return False

@@ -1,3 +1,5 @@
+import sys
+
 from tressed.exceptions import TressedValueError
 
 TYPE_CHECKING = False
@@ -15,7 +17,29 @@ __all__ = [
     "load_tuple",
     "load_dataclass",
     "load_newtype",
+    "load_typeddict",
 ]
+
+if TYPE_CHECKING:
+    from enum import Enum, auto
+
+    class _MissingType(Enum):
+        _MISSING = auto()
+
+    _MISSING = _MissingType._MISSING
+
+else:
+    _MISSING = object()
+
+
+def _type_path_repr(type_path: TypePath) -> str:
+    return f".{'.'.join(map(str, type_path))}"
+
+
+def _type_form_repr(type_form: TypeForm) -> str:
+    if name := getattr(type_form, "__name__", None):
+        return name
+    return repr(type_form)
 
 
 def load_identity[T](
@@ -26,20 +50,37 @@ def load_identity[T](
     """
     if type(value) is type_form:
         return value
-    if (name := getattr(type_form, "__name__", None)) is None:
-        name = repr(type_form)
     raise TressedValueError(
-        f"Cannot to load value {value!r} at path {type_path!r} into {name}"
+        f"Cannot to load value {value!r} at path {_type_path_repr(type_path)} into {_type_form_repr(type_form)}"
     )
 
 
 def load_simple_scalar[T](
-    value: Any, type_form: TypeForm[T], type_path, loader: LoaderProtocol
+    value: Any, type_form: TypeForm[T], type_path: TypePath, loader: LoaderProtocol
 ) -> T:
     """
     Construct an instance of the given type using the value as the sole argument.
     """
     return type_form(value)  # type: ignore[call-arg]
+
+
+def load_dict[T](
+    value: Any, type_form: TypeForm[T], type_path: TypePath, loader: LoaderProtocol
+) -> T:
+    from tressed.predicates import get_args
+
+    args = get_args(type_form)
+
+    assert args is not None
+    assert len(args) == 2
+
+    key_type, value_type = args
+    return {  # type: ignore[return-value]
+        loader._load(
+            item_key, key_type, (item_path := (*type_path, item_key))
+        ): loader._load(item_value, value_type, item_path)
+        for item_key, item_value in value.items()
+    }
 
 
 def load_simple_collection[T](
@@ -52,8 +93,8 @@ def load_simple_collection[T](
     args = get_args(type_form)
     if origin is None or args is None or len(args) != num_expected_args:
         raise TressedValueError(
-            f"Cannot to load value {value!r} at path {type_path!r}, "
-            f"{getattr(type_form, '__name__', type_form)} is not a homogeneous generic type"
+            f"Cannot to load value {value!r} at path {_type_path_repr(type_path)}, "
+            f"{_type_form_repr(type_form)} is not a homogeneous generic type"
         )
 
     item_type = args[0]
@@ -72,7 +113,7 @@ def load_tuple[T](
     args = get_args(type_form)
     if origin is None or args is None:
         raise TressedValueError(
-            f"Cannot to load value {value!r} at path {type_path!r}, "
+            f"Cannot to load value {value!r} at path {_type_path_repr(type_path)}, "
             f"{getattr(type_form, '__name__', type_form)} is not a generic type"
         )
 
@@ -85,7 +126,7 @@ def load_tuple[T](
 def load_dataclass[T](
     value: Any, type_form: TypeForm[T], type_path: TypePath, loader: LoaderProtocol
 ) -> T:
-    from dataclasses import MISSING, fields
+    from dataclasses import fields
 
     loaded = {}
 
@@ -94,7 +135,7 @@ def load_dataclass[T](
         alias = loader._resolve_alias(type_form, type_path, field_name)
         if not field.init:
             continue
-        if (field_value := value.get(alias, MISSING)) is not MISSING:
+        if (field_value := value.get(alias, _MISSING)) is not _MISSING:
             loaded[field_name] = field_value
     return type_form(**loaded)
 
@@ -104,3 +145,61 @@ def load_newtype[T: TypeForm](
 ) -> T:
     supertype = getattr(type_form, "__supertype__")
     return loader._load(value, supertype, type_path)
+
+
+def _is_extra_items_sentinel(value: Any) -> bool:
+    if (typing := sys.modules.get("typing")) and hasattr(typing, "NoExtraItems"):
+        if value is getattr(typing, "NoExtraItems"):
+            return True
+    if typing_extensions := sys.modules.get("typing_extensions"):
+        if value is typing_extensions.NoExtraItems:
+            return True
+    return False
+
+
+def load_typeddict[T](
+    value: Any, type_form: TypeForm[T], type_path: TypePath, loader: LoaderProtocol
+) -> T:
+    values: dict[str, Any] = {}
+    required_keys = getattr(type_form, "__required_keys__")
+    optional_keys = getattr(type_form, "__optional_keys__")
+    valid_keys = required_keys | optional_keys
+
+    closed = getattr(type_form, "__closed__", None)
+    extra_items = getattr(type_form, "__extra_items__", _MISSING)
+    if _is_extra_items_sentinel(extra_items):
+        extra_items = _MISSING
+
+    extra_keys: set[str] | None = None
+    for item_key, item_value in value.items():
+        if extra_items is not _MISSING:
+            if item_key not in valid_keys:
+                values[item_key] = loader._load(
+                    item_value, extra_items, (*type_path, item_key)
+                )
+                continue
+
+        elif closed:
+            if item_key not in valid_keys:
+                if extra_keys is None:
+                    extra_keys = set()
+                extra_keys.add(item_key)
+                continue
+
+        values[item_key] = item_value
+
+    if missing_keys := (required_keys - values.keys()):
+        raise TressedValueError(
+            f"Failed to load value of type {_type_form_repr(type(value))} into {_type_form_repr(type_form)} "
+            f"at path {_type_path_repr(type_path)}, "
+            f"missing required keys {', '.join(map(repr, missing_keys))}: {value}"
+        )
+
+    if extra_keys:
+        raise TressedValueError(
+            f"Failed to load value of type {_type_form_repr(type(value))} into {_type_form_repr(type_form)} "
+            f"at path {_type_path_repr(type_path)}, "
+            f"extra keys {', '.join(sorted(map(repr, extra_keys)))}: {value}"
+        )
+
+    return values  # type: ignore[return-value]
