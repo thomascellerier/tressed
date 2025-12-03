@@ -337,3 +337,17 @@ def test_load_namedtuple() -> None:
         assert loader.load({"bar": "BAR!"}, SomeNamedTuple) == SomeNamedTuple(
             foo=(1, 1.1), bar="BAR!"
         )
+
+
+def test_load_from_argparse_namespace() -> None:
+    from argparse import Namespace
+    from typing import NamedTuple
+
+    class SomeNamedTuple(NamedTuple):
+        foo: tuple[int, float]
+        bar: str = "bar"
+
+    loader = Loader()
+    assert loader.load(
+        Namespace(foo=[1, 1.1], bar="BAR!"), SomeNamedTuple
+    ) == SomeNamedTuple(foo=(1, 1.1), bar="BAR!")

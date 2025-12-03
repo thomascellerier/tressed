@@ -4,6 +4,7 @@ from tressed.exceptions import TressedValueError
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
+    from collections.abc import Iterator
     from typing import Any
 
     from typing_extensions import TypeForm
@@ -41,6 +42,16 @@ def _type_form_repr(type_form: TypeForm) -> str:
     if name := getattr(type_form, "__name__", None):
         return name
     return repr(type_form)
+
+
+def _items(value: Any) -> Iterator[tuple[Any, Any]]:
+    type_ = type(value)
+    if type_ is dict:
+        return value.items()
+    elif (argparse := sys.modules.get("argparse")) and type_ is argparse.Namespace:
+        return vars(value).items()
+    else:
+        return value.items()
 
 
 def load_identity[T](
@@ -107,7 +118,7 @@ def load_dict[T](
         loader._load(
             item_key, key_type, (item_path := (*type_path, item_key))
         ): loader._load(item_value, value_type, item_path)
-        for item_key, item_value in value.items()
+        for item_key, item_value in _items(value)
     }
 
 
@@ -199,7 +210,7 @@ def load_typeddict[T](
         extra_items = _MISSING
 
     extra_keys: set[str] | None = None
-    for item_key, item_value in value.items():
+    for item_key, item_value in _items(value):
         if extra_items is not _MISSING:
             if item_key not in valid_keys:
                 values[item_key] = loader._load(
@@ -241,6 +252,6 @@ def load_namedtuple[T](
     type_hints = get_type_hints(type_form)
     values: dict[str, Any] = {
         key: loader._load(field_value, type_hints[key], (*type_path, key))
-        for key, field_value in value.items()
+        for key, field_value in _items(value)
     }
     return type_form(**values)

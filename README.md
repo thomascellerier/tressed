@@ -31,9 +31,9 @@ assert loaded == SomeDataclass(
 )
 ```
 
-## Supported types
+## Supported type forms
 
-The following types are supported out of the box:
+The following type forms are supported out of the box:
 
 - bool
 - int
@@ -53,6 +53,22 @@ The following types are supported out of the box:
 - ipaddress.{IPv4Address,IPv6Address,IPv4Interface,IPv6Interface,IPv4Network,IPv6Network}
 
 It is easy to add support for custom types as needed when creating a loader.
+
+## Supported source types
+
+Data can be loaded from the following basic types, matching types used by
+common serialization formats.
+
+Additionally data can be loaded from argparse namespaces to support
+easily loading arguments into data types for simple CLI applications.
+
+- int
+- float
+- bool
+- str
+- list
+- dict
+- argparse.Namespace
 
 ## Installation
 
