@@ -37,6 +37,7 @@ __all__ = [
     "is_newtype",
     "is_typeddict",
     "is_dict_type",
+    "is_namedtuple_type",
 ]
 
 if TYPE_CHECKING:
@@ -173,4 +174,12 @@ def is_dict_type(type_form: TypeForm) -> bool:
         return True
     elif (typing := sys.modules.get("typing")) and origin is typing.Dict:
         return True
+    return False
+
+
+def is_namedtuple_type(type_form: TypeForm) -> bool:
+    if (typing := sys.modules.get("typing")) and (
+        orig_bases := getattr(type_form, "__orig_bases__", None)
+    ):
+        return typing.NamedTuple in orig_bases
     return False

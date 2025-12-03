@@ -14,7 +14,6 @@ from tressed.loader import Loader
 def test_load_identity() -> None:
     loader = Loader()
     assert loader.load(1, int) == 1
-    assert loader.load(1.1, float) == 1.1
     assert loader.load(True, bool) is True
     assert loader.load(False, bool) is False
     assert loader.load("foo", str) == "foo"
@@ -22,6 +21,22 @@ def test_load_identity() -> None:
 
     with pytest.raises(TressedValueError):
         loader.load(1, str)
+
+
+def test_load_float() -> None:
+    loader = Loader()
+
+    assert loader.load(1.1, float) == 1.1
+    assert loader.load(1, float) == 1.0
+
+
+def test_load_complex() -> None:
+    loader = Loader()
+
+    loader.load([1.1, 2.2], complex) == 1.1 + 2.2j
+    loader.load([1, 2.2], complex) == 1 + 2.2j
+    loader.load([1.1, 2], complex) == 1.1 + 2j
+    loader.load([1, 2], complex) == 1 + 2j
 
 
 def test_load_list() -> None:
@@ -297,3 +312,28 @@ def test_load_typeddict_extra_items() -> None:
     )
     assert_type(loaded, SomeTypedDict)
     assert loaded == {"foo": 123, "bar": "bar", "buz": "BUZ", "baz": "BAZ"}
+
+
+def test_load_namedtuple() -> None:
+    from typing import NamedTuple
+
+    class SomeNamedTuple(NamedTuple):
+        foo: tuple[int, float]
+        bar: str = "bar"
+
+    loader = Loader()
+    assert loader.load(
+        {"foo": [1, 1.1], "bar": "BAR!"}, SomeNamedTuple
+    ) == SomeNamedTuple(foo=(1, 1.1), bar="BAR!")
+    assert loader.load({"foo": [1, 1.1]}, SomeNamedTuple) == SomeNamedTuple(
+        foo=(1, 1.1), bar="bar"
+    )
+
+    with pytest.raises(TressedValueError):
+        assert loader.load(
+            {"foo": [1, 1.1], "baz": "baz"}, SomeNamedTuple
+        ) == SomeNamedTuple(foo=(1, 1.1), bar="bar")
+    with pytest.raises(TressedValueError):
+        assert loader.load({"bar": "BAR!"}, SomeNamedTuple) == SomeNamedTuple(
+            foo=(1, 1.1), bar="BAR!"
+        )

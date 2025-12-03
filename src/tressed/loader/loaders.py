@@ -18,6 +18,7 @@ __all__ = [
     "load_dataclass",
     "load_newtype",
     "load_typeddict",
+    "load_namedtuple",
 ]
 
 if TYPE_CHECKING:
@@ -62,6 +63,33 @@ def load_simple_scalar[T](
     Construct an instance of the given type using the value as the sole argument.
     """
     return type_form(value)  # type: ignore[call-arg]
+
+
+def load_float[T](
+    value: Any, type_form: TypeForm[T], type_path: TypePath, loader: LoaderProtocol
+) -> T:
+    """
+    Load float with int promotion.
+    """
+    type_ = type(value)
+    if type_ is float:
+        return value
+    if type_ is int:
+        return type_form(value)  # type: ignore[call-arg]
+    raise TressedValueError(
+        f"Cannot to load value {value!r} at path {_type_path_repr(type_path)} into {_type_form_repr(type_form)}"
+    )
+
+
+def load_complex[T](
+    value: Any, type_form: TypeForm[T], type_path: TypePath, loader: LoaderProtocol
+) -> T:
+    """
+    Load complex from a sequence a pair of floats.
+    """
+    real = loader._load(value[0], float, (*type_path, 0))
+    imag = loader._load(value[1], float, (*type_path, 1))
+    return type_form(real, imag)  # type: ignore[call-arg]
 
 
 def load_dict[T](
@@ -203,3 +231,16 @@ def load_typeddict[T](
         )
 
     return values  # type: ignore[return-value]
+
+
+def load_namedtuple[T](
+    value: Any, type_form: TypeForm[T], type_path: TypePath, loader: LoaderProtocol
+) -> T:
+    from typing import get_type_hints
+
+    type_hints = get_type_hints(type_form)
+    values: dict[str, Any] = {
+        key: loader._load(field_value, type_hints[key], (*type_path, key))
+        for key, field_value in value.items()
+    }
+    return type_form(**values)

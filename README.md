@@ -39,8 +39,10 @@ The following types are supported out of the box:
 - int
 - float
 - str
+- complex
 - tuple[T1, ..., Tn], typing.Tuple[T1, ..., Tn]
 - tuple[T, ...], typing.Tuple[T, ...] a.k.a homogeneous tuple
+- typing.NamedTuple
 - list[T], typing.List[T]
 - set[T], typing.Set[T]
 - frozenset[T], typing.FrozenSet[T]
