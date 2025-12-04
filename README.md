@@ -89,13 +89,13 @@ common serialization formats.
 Additionally data can be loaded from argparse namespaces to support
 easily loading arguments into data types for simple CLI applications.
 
-- int
-- float
-- bool
-- str
-- list
-- dict
-- argparse.Namespace
+- `int`
+- `float`
+- `bool`
+- `str`
+- `list`
+- `dict`
+- `argparse.Namespace`
 
 ## Installation
 
