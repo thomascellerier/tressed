@@ -3,7 +3,7 @@ name = "tressed"
 authors = [
   { name="Thomas Cellerier", email="thomascellerier@gmail.com" },
 ]
-version = "0.0.1"
+version = "0.0.2"
 description = "Glue types together"
 readme = "README.md"
 requires-python = ">=3.14"
