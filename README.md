@@ -13,36 +13,42 @@ Tressed is a easy to use pure python library to deserialize and serialize to and
 
 ---
 
-## Usage
+Install tressed using pip:
 
-```Python
-from dataclasses import dataclass, field
-from tressed.loader import Loader
-
-@dataclass
-class SomeDataclass:
-    foo: str
-    bar: str = "bar"
-    baz: list[int] = field(default_factory=lambda: [1, 2, 3])
-    bar_bar: tuple[int, str] = field(metadata={"alias": "barBar"}, kw_only=True)
-
-value = {
-    "foo": "foo",
-    "barBar": (2, "humbug"),
-}
-
-loader = Loader()
-loaded = loader.load(value, SomeDataclass)
-
-assert loaded == SomeDataclass(
-    foo="foo",
-    bar="bar",
-    baz=[1, 2, 3],
-    bar_bar=(2, "humbug"),
-)
+```shell
+$ pip install tressed
 ```
 
-## Supported type forms
+Now, let's get started:
+
+```pycon
+>>> from dataclasses import dataclass, field
+>>> from pprint import pprint
+>>> 
+>>> from tressed.loader import Loader
+>>> from tressed.alias import to_camel
+>>> 
+>>> @dataclass
+... class SomeDataclass:
+...     some_field: str
+...     some_default_field: str = "bar"
+...     some_default_factory_field: list[int] = field(default_factory=lambda: [1, 2, 3])
+...     other_field: tuple[int, str] = field(metadata={"alias": "OTHER"}, kw_only=True)
+...     
+>>> value = {
+...     "someField": "foo",
+...     "OTHER": (2, "humbug"),
+... }
+... 
+>>> pprint(loader.load(value, SomeDataclass))
+SomeDataclass(some_field='foo',
+              some_default_field='bar',
+              some_default_factory_field=[1, 2, 3],
+              other_field=(2, 'humbug'))
+```
+
+## Features
+### Supported type forms
 
 The following type forms are supported out of the box:
 
@@ -65,7 +71,7 @@ The following type forms are supported out of the box:
 
 It is easy to add support for custom types as needed when creating a loader.
 
-## Supported source types
+### Supported source types
 
 Data can be loaded from the following basic types, matching types used by
 common serialization formats.
@@ -84,9 +90,6 @@ easily loading arguments into data types for simple CLI applications.
 ## Installation
 
 Using pip:
-```bash
-pip install tressed
-```
 
 Or using uv:
 ```bash
