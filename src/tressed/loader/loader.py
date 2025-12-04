@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
     from typing import Any
 
-    from tressed.alias import AliasFn, AliasResolver
+    from tressed.alias import Alias, AliasFn, AliasResolver
     from tressed.loader.types import TypeLoaderFn, TypePath
     from tressed.predicates import TypePredicate
 
@@ -90,18 +90,19 @@ def _default_type_mappers(specialize: bool) -> Mapping[TypePredicate, TypeLoader
     }
 
 
-type Alias = str
-
-
 class Loader:
     def __init__(
         self,
         type_loaders: Mapping[TypeForm, TypeLoaderFn] | None = None,
         type_mappers: Mapping[TypePredicate, TypeLoaderFn] | None = None,
         enable_specialization: bool = False,
-        alias_field: str = "alias",
+        # If set enables alias lookup on fields, for example for dataclasses.
+        alias_field: str | None = "alias",
+        # Pass custom alias function, for example mapping field names to camelCase using to_camel.
         alias_fn: AliasFn | None = None,
-        alias_resolver_factory: Callable[[AliasFn], AliasResolver] | None = None,
+        # Overriding the resolver factory allows for more advanced behavior like disablign caching,
+        # or changing the alias resolution behavior entirely.
+        alias_resolver_factory: Callable[[AliasFn | None], AliasResolver] | None = None,
     ) -> None:
         # Map a type to its loader
         if type_loaders is None:
@@ -124,10 +125,11 @@ class Loader:
             make_maybe_dataclass_alias_fn,
         )
 
-        alias_fn = compose_alias_fn(
-            make_maybe_dataclass_alias_fn(alias_field=alias_field),
-            alias_fn if alias_fn is not None else identity_alias_fn,
-        )
+        if alias_field:
+            alias_fn = compose_alias_fn(
+                make_maybe_dataclass_alias_fn(alias_field=alias_field),
+                alias_fn if alias_fn is not None else identity_alias_fn,
+            )
 
         if alias_resolver_factory is None:
             self._alias_resolver = AliasResolver(alias_fn)
