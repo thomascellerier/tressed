@@ -1,4 +1,4 @@
-# tressed
+<p align="center"><strong>tressed</strong> <em>- Serialize and deserialize types, in any order.</em></p>
 
 <p align="center">
 <a href="https://github.com/thomascellerier/tressed/actions/workflows/test.yaml">
@@ -9,7 +9,9 @@
 </a>
 </p>
 
-Serialize and deserialize types, in any order.
+Tressed is a easy to use pure python library to deserialize and serialize to and from Python types.
+
+---
 
 ## Usage
 
