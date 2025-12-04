@@ -543,3 +543,26 @@ def test_load_generic_type_alias() -> None:
         str(exc_info.value)
         == "Failed to load value of type dict into SomeMapping[K=int, V=?] at path ., type form should have only concrete type parameters"
     )
+
+
+def test_load_optional() -> None:
+    loader = Loader()
+
+    assert loader.load(1, int | None) == 1
+    assert loader.load(1, None | int) == 1
+    assert loader.load(None, int | None) is None
+    assert loader.load(None, None | int) is None
+    with pytest.raises(TressedValueError):
+        assert loader.load("foo", int | None)
+
+
+def test_load_legacy_optional() -> None:
+    from typing import Optional
+
+    loader = Loader()
+
+    assert loader.load(1, Optional[int]) == 1
+    assert loader.load(None, Optional[int]) is None
+    assert loader.load(None, Optional[None]) is None
+    with pytest.raises(TressedValueError):
+        assert loader.load("foo", Optional[int])

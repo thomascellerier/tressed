@@ -46,6 +46,7 @@ def _default_type_mappers(specialize: bool) -> Mapping[TypePredicate, TypeLoader
         load_tuple,
         load_type_alias,
         load_typeddict,
+        load_optional,
     )
     from tressed.predicates import (
         is_dataclass_type,
@@ -63,6 +64,7 @@ def _default_type_mappers(specialize: bool) -> Mapping[TypePredicate, TypeLoader
         is_type_alias_type,
         is_typeddict,
         is_uuid_type,
+        is_optional_type,
     )
 
     load_tuple_ = load_tuple
@@ -90,6 +92,7 @@ def _default_type_mappers(specialize: bool) -> Mapping[TypePredicate, TypeLoader
         is_dict_type: load_dict,
         is_literal_type: load_literal,
         is_type_alias_type: load_type_alias,
+        is_optional_type: load_optional,
         is_newtype: load_newtype,
         is_typeddict: load_typeddict,
         is_dataclass_type: load_dataclass,

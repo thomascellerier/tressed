@@ -316,3 +316,23 @@ def load_type_alias[T](
         evaluated_type = evaluated_type[*args]
 
     return loader._load(value, evaluated_type, type_path)
+
+
+def load_optional[T](
+    value: Any, type_form: TypeForm[T], type_path: TypePath, loader: LoaderProtocol
+) -> T:
+    if value is None:
+        return value  # type: ignore[return-value]
+
+    from tressed.predicates import get_args
+
+    args = get_args(type_form)
+    match args:
+        case [T, NoneType] if NoneType is type(None):
+            return loader._load(value, T, type_path)
+        case [NoneType, T] if NoneType is type(None):
+            return loader._load(value, T, type_path)
+        case [T]:
+            return loader._load(value, T, type_path)
+        case _:
+            assert False, "unreachable"

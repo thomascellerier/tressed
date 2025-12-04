@@ -68,8 +68,9 @@ The following type forms are supported out of the box:
 - set[T], typing.Set[T]
 - frozenset[T], typing.FrozenSet[T]
 - dict[K, V], typing.Dict[K, V]
-- typing.Literal
+- typing.Literal[L1, .., Ln]
 - typing.TypeAliasType
+- T | None, typing.Optional[T]
 - enum.Enum
 - typing.TypedDict, typing\_extensions.TypedDict, including support for PEP 728 closed and extra\_items.
 - dataclasses.dataclass

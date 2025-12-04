@@ -42,6 +42,7 @@ __all__ = [
     "is_enum_type",
     "is_literal_type",
     "is_type_alias_type",
+    "is_optional_type",
 ]
 
 if TYPE_CHECKING:
@@ -211,3 +212,30 @@ def is_type_alias_type(type_form: TypeForm) -> bool:
     return hasattr(type_form, "__type_params__") and hasattr(
         type_form, "evaluate_value"
     )
+
+
+def is_optional_type(type_form: TypeForm) -> bool:
+    """
+    One of:
+        T | None
+        typing.Optional[T]
+    """
+    origin = get_origin(type_form)
+    if origin is None:
+        return False
+
+    args = get_args(type_form)
+    if args is None:
+        return False
+
+    if len(args) == 2:
+        if type(None) in args:
+            import types
+
+            return origin is types.UnionType
+        return False
+
+    elif len(args) == 1 and (typing := sys.modules.get("typing")):
+        return get_origin(type_form) is typing.Optional
+
+    return False
