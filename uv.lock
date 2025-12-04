@@ -194,7 +194,7 @@ wheels = [
 
 [[package]]
 name = "tressed"
-version = "0.0.2"
+version = "0.0.3"
 source = { virtual = "." }
 
 [package.dev-dependencies]

@@ -40,6 +40,7 @@ Now, let's get started:
 ...     "OTHER": (2, "humbug"),
 ... }
 ... 
+>>> loader = Loader(alias_fn=to_camel)
 >>> pprint(loader.load(value, SomeDataclass))
 SomeDataclass(some_field='foo',
               some_default_field='bar',

@@ -3,7 +3,7 @@ name = "tressed"
 authors = [
   { name="Thomas Cellerier", email="thomascellerier@gmail.com" },
 ]
-version = "0.0.2"
+version = "0.0.3"
 description = "Deserialize and serialize types, in any order"
 readme = "README.md"
 license = "MIT"
