@@ -43,6 +43,7 @@ __all__ = [
     "is_literal_type",
     "is_type_alias_type",
     "is_optional_type",
+    "is_union_type",
 ]
 
 if TYPE_CHECKING:
@@ -228,14 +229,35 @@ def is_optional_type(type_form: TypeForm) -> bool:
     if args is None:
         return False
 
-    if len(args) == 2:
+    num_args = len(args)
+    if num_args == 2:
         if type(None) in args:
             import types
 
-            return origin is types.UnionType
+            if origin is types.UnionType:
+                return True
+
+            if typing := sys.modules.get("typing"):
+                return origin is typing.Union
+
+    elif num_args == 1 and (typing := sys.modules.get("typing")):
+        return origin is typing.Optional
+
+    return False
+
+
+def is_union_type(type_form: TypeForm) -> bool:
+    origin = get_origin(type_form)
+    args = get_args(type_form)
+    if not args:
+        # A union needs at least one argument
         return False
 
-    elif len(args) == 1 and (typing := sys.modules.get("typing")):
-        return get_origin(type_form) is typing.Optional
+    import types
 
+    if origin is types.UnionType:
+        return True
+
+    if typing := sys.modules.get("typing"):
+        return origin is typing.Union
     return False

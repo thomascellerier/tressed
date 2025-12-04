@@ -56,27 +56,28 @@ Tressed uses the proposed [PEP 747](https://peps.python.org/pep-0747/) `TypeForm
 
 The following type forms are supported out of the box:
 
-- bool
-- int
-- float
-- str
-- complex
-- tuple[T1, ..., Tn], typing.Tuple[T1, ..., Tn]
-- tuple[T, ...], typing.Tuple[T, ...] a.k.a homogeneous tuple
-- typing.NamedTuple
-- list[T], typing.List[T]
-- set[T], typing.Set[T]
-- frozenset[T], typing.FrozenSet[T]
-- dict[K, V], typing.Dict[K, V]
-- typing.Literal[L1, .., Ln]
-- typing.TypeAliasType
-- T | None, typing.Optional[T]
-- enum.Enum
-- typing.TypedDict, typing\_extensions.TypedDict, including support for PEP 728 closed and extra\_items.
-- dataclasses.dataclass
-- typing.NewType[T]
-- ipaddress.{IPv4Address,IPv6Address,IPv4Interface,IPv6Interface,IPv4Network,IPv6Network}
-- uuid.UUID
+- `bool`
+- `int`
+- `float`
+- `str`
+- `complex`
+- `tuple[T1, ..., Tn]`, `typing.Tuple[T1, ..., Tn]`
+- `tuple[T, ...]`, `typing.Tuple[T, ...]` (a.k.a homogeneous tuple)
+- `typing.NamedTuple`
+- `list[T]`, `typing.List[T]`
+- `set[T]`, `typing.Set[T]`
+- `frozenset[T]`, `typing.FrozenSet[T]`
+- `dict[K, V]`, `typing.Dict[K, V]`
+- `typing.Literal[L1, .., Ln]`
+- `typing.TypeAliasType`
+- `T | None`, `typing.Optional[T]`
+- `T1 | .. | Tn`, `typing.Union[T1, .., Tn]` (Untagged Union)
+- `enum.Enum`
+- `typing.TypedDict`, `typing_extensions.TypedDict` (including support for PEP 728 `closed` and `extra_items`)
+- `dataclasses.dataclass`
+- `typing.NewType[T]`
+- `ipaddress.{IPv4Address, IPv6Address, IPv4Interface, IPv6Interface, IPv4Network, IPv6Network}`
+- `uuid.UUID`
 
 It is easy to add support for custom types as needed when creating a loader.
 

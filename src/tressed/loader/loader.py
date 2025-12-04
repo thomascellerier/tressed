@@ -41,12 +41,13 @@ def _default_type_mappers(specialize: bool) -> Mapping[TypePredicate, TypeLoader
         load_literal,
         load_namedtuple,
         load_newtype,
+        load_optional,
         load_simple_collection,
         load_simple_scalar,
         load_tuple,
         load_type_alias,
         load_typeddict,
-        load_optional,
+        load_union,
     )
     from tressed.predicates import (
         is_dataclass_type,
@@ -59,12 +60,13 @@ def _default_type_mappers(specialize: bool) -> Mapping[TypePredicate, TypeLoader
         is_literal_type,
         is_namedtuple_type,
         is_newtype,
+        is_optional_type,
         is_set_type,
         is_tuple_type,
         is_type_alias_type,
         is_typeddict,
+        is_union_type,
         is_uuid_type,
-        is_optional_type,
     )
 
     load_tuple_ = load_tuple
@@ -93,6 +95,8 @@ def _default_type_mappers(specialize: bool) -> Mapping[TypePredicate, TypeLoader
         is_literal_type: load_literal,
         is_type_alias_type: load_type_alias,
         is_optional_type: load_optional,
+        # NOTE: Union has to be after optional, since optionals of the form T | None are also unions.
+        is_union_type: load_union,
         is_newtype: load_newtype,
         is_typeddict: load_typeddict,
         is_dataclass_type: load_dataclass,

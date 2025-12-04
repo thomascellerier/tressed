@@ -6,7 +6,11 @@ import pytest
 from pytest_benchmark.fixture import BenchmarkFixture
 from pytest_mock import MockerFixture
 
-from tressed.exceptions import TressedTypeError, TressedValueError
+from tressed.exceptions import (
+    TressedExceptionGroup,
+    TressedTypeError,
+    TressedValueError,
+)
 from tressed.loader import Loader
 
 
@@ -548,6 +552,7 @@ def test_load_generic_type_alias() -> None:
 def test_load_optional() -> None:
     loader = Loader()
 
+    # T | None
     assert loader.load(1, int | None) == 1
     assert loader.load(1, None | int) == 1
     assert loader.load(None, int | None) is None
@@ -557,12 +562,64 @@ def test_load_optional() -> None:
 
 
 def test_load_legacy_optional() -> None:
-    from typing import Optional
+    from typing import Optional, Union
 
     loader = Loader()
 
+    # typing.Optional[T]
     assert loader.load(1, Optional[int]) == 1
     assert loader.load(None, Optional[int]) is None
     assert loader.load(None, Optional[None]) is None
     with pytest.raises(TressedValueError):
         assert loader.load("foo", Optional[int])
+
+    # typing.Union[T, None], typing.Union[None, T]
+    assert loader.load(1, Union[int, None]) == 1
+    assert loader.load(None, Union[int, None]) is None
+    assert loader.load(1, Union[None, int]) == 1
+    assert loader.load(None, Union[None, int]) is None
+    assert loader.load(None, Union[None, None]) is None
+    with pytest.raises(TressedValueError):
+        assert loader.load("foo", Union[int, None])
+
+
+def test_load_union() -> None:
+    loader = Loader()
+
+    assert loader.load(1, int | str) == 1
+    assert loader.load("foo", int | str) == "foo"
+
+    with pytest.raises(TressedValueError) as exc_info:
+        loader.load([1, 2], int | str)
+    assert (
+        str(exc_info.value)
+        == "Failed to load value [1, 2] at path () into type form int | str"
+    )
+    cause = exc_info.value.__cause__
+    assert isinstance(cause, ExceptionGroup)
+    assert [str(e) for e in cause.exceptions] == [
+        "Cannot load value [1, 2] at path . into int",
+        "Cannot load value [1, 2] at path . into str",
+    ]
+
+
+def test_load_legacy_union() -> None:
+    from typing import Union
+
+    loader = Loader()
+
+    assert loader.load(1, Union[int, str]) == 1
+    assert loader.load("foo", Union[int, str]) == "foo"
+
+    with pytest.raises(TressedValueError) as exc_info:
+        loader.load([1, 2], Union[int, str])
+    assert (
+        str(exc_info.value)
+        == "Failed to load value [1, 2] at path () into type form int | str"
+    )
+    cause = exc_info.value.__cause__
+    assert isinstance(cause, TressedExceptionGroup)
+    assert [str(e) for e in cause.exceptions] == [
+        "Cannot load value [1, 2] at path . into int",
+        "Cannot load value [1, 2] at path . into str",
+    ]

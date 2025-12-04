@@ -1,6 +1,6 @@
 import sys
 
-from tressed.exceptions import TressedValueError
+from tressed.exceptions import TressedExceptionGroup, TressedValueError
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
@@ -23,13 +23,19 @@ if TYPE_CHECKING:
 __all__ = [
     "load_identity",
     "load_simple_scalar",
+    "load_float",
+    "load_complex",
+    "load_dict",
     "load_simple_collection",
     "load_tuple",
     "load_dataclass",
     "load_newtype",
     "load_typeddict",
     "load_namedtuple",
+    "load_literal",
     "load_type_alias",
+    "load_optional",
+    "load_union",
 ]
 
 if TYPE_CHECKING:
@@ -89,7 +95,7 @@ def load_identity[T](
     if type(value) is type_form:
         return value
     raise TressedValueError(
-        f"Cannot to load value {value!r} at path {_type_path_repr(type_path)} into {_type_form_repr(type_form)}"
+        f"Cannot load value {value!r} at path {_type_path_repr(type_path)} into {_type_form_repr(type_form)}"
     )
 
 
@@ -114,7 +120,7 @@ def load_float[T](
     if type_ is int:
         return type_form(value)  # type: ignore[call-arg]
     raise TressedValueError(
-        f"Cannot to load value {value!r} at path {_type_path_repr(type_path)} into {_type_form_repr(type_form)}"
+        f"Cannot load value {value!r} at path {_type_path_repr(type_path)} into {_type_form_repr(type_form)}"
     )
 
 
@@ -158,7 +164,7 @@ def load_simple_collection[T](
     args = get_args(type_form)
     if origin is None or args is None or len(args) != num_expected_args:
         raise TressedValueError(
-            f"Cannot to load value {value!r} at path {_type_path_repr(type_path)}, "
+            f"Cannot load value {value!r} at path {_type_path_repr(type_path)}, "
             f"{_type_form_repr(type_form)} is not a homogeneous generic type"
         )
 
@@ -178,7 +184,7 @@ def load_tuple[T](
     args = get_args(type_form)
     if origin is None or args is None:
         raise TressedValueError(
-            f"Cannot to load value {value!r} at path {_type_path_repr(type_path)}, "
+            f"Cannot load value {value!r} at path {_type_path_repr(type_path)}, "
             f"{getattr(type_form, '__name__', type_form)} is not a generic type"
         )
 
@@ -336,3 +342,28 @@ def load_optional[T](
             return loader._load(value, T, type_path)
         case _:
             assert False, "unreachable"
+
+
+def load_union[T](
+    value: Any, type_form: TypeForm[T], type_path: TypePath, loader: LoaderProtocol
+) -> T:
+    from tressed.predicates import get_args
+
+    args = get_args(type_form)
+    assert args, "unreachable"
+
+    errors = None
+    for arg in args:
+        try:
+            return loader._load(value, arg, type_path)
+        except TressedValueError as error:
+            if errors is None:
+                errors = []
+            errors.append(error)
+
+    assert args, "unreachable"
+    raise TressedExceptionGroup(
+        f"Failed to load value of type {_type_form_repr(type(value))} into {_type_form_repr(type_form)} "
+        f"at path {_type_path_repr(type_path)}",
+        errors,
+    )

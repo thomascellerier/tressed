@@ -1,4 +1,9 @@
-__all__ = ["TressedError", "TressedTypeError", "TressedValueError"]
+__all__ = [
+    "TressedError",
+    "TressedTypeError",
+    "TressedValueError",
+    "TressedExceptionGroup",
+]
 
 
 class TressedError(Exception):
@@ -10,4 +15,8 @@ class TressedTypeError(TressedError, TypeError):
 
 
 class TressedValueError(TressedError, ValueError):
+    pass
+
+
+class TressedExceptionGroup(ExceptionGroup, TressedError):
     pass
