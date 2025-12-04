@@ -1,4 +1,4 @@
-from tressed.alias import AliasResolver, to_camel, to_pascal
+from tressed.alias import AliasResolver, compose_alias_fn, to_camel, to_pascal
 
 
 def test_to_camel() -> None:
@@ -19,6 +19,36 @@ def test_to_pascal() -> None:
     assert to_pascal("") == ""
     assert to_pascal("_") == "_"
     assert to_pascal("___") == "___"
+
+
+def test_compose_alias_fn() -> None:
+    def maybe_alias(name: str) -> str | None:
+        match name:
+            case "foo":
+                return "FOO!"
+            case _:
+                return None
+
+    def maybe_another_alias(name: str) -> str | None:
+        match name:
+            case "bar":
+                return "bar?"
+            case _:
+                return None
+
+    def definitely_an_alias(name: str) -> str:
+        return name.upper()
+
+    alias_fn = compose_alias_fn(
+        maybe_alias,
+        maybe_another_alias,
+        definitely_an_alias,
+    )
+
+    assert alias_fn("foo", int, ()) == "FOO!"
+    assert alias_fn("bar", int, ()) == "bar?"
+    assert alias_fn("baz", int, ()) == "BAZ"
+    assert alias_fn("buz", int, ()) == "BUZ"
 
 
 def test_alias_resolver() -> None:

@@ -9,7 +9,7 @@ from tressed.exceptions import TressedTypeError, TressedValueError
 TYPE_CHECKING = False
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
-    from typing import Any, Final
+    from typing import Any
 
     from tressed.alias import AliasFn, AliasResolver
     from tressed.loader.types import TypeLoaderFn, TypePath
@@ -117,30 +117,22 @@ class Loader:
         else:
             self._type_mappers = dict(type_mappers)
 
-        from tressed.alias import AliasResolver, identity_alias_fn, normalize_alias_fn
+        from tressed.alias import (
+            AliasResolver,
+            compose_alias_fn,
+            identity_alias_fn,
+            make_maybe_dataclass_alias_fn,
+        )
 
-        if alias_fn is None:
-            alias_fn = identity_alias_fn
-
-        self._alias_field: Final = alias_field
-        self._default_alias_fn = normalize_alias_fn(alias_fn)
+        alias_fn = compose_alias_fn(
+            make_maybe_dataclass_alias_fn(alias_field=alias_field),
+            alias_fn if alias_fn is not None else identity_alias_fn,
+        )
 
         if alias_resolver_factory is None:
-
-            def alias_resolver_factory(alias_fn: AliasFn) -> AliasResolver:
-                return AliasResolver(alias_fn=alias_fn, cache_resolved_aliases=True)
-
-        self._alias_resolver = alias_resolver_factory(self._alias_fn)
-
-    def _alias_fn[T](
-        self, name: str, type_form: TypeForm, type_path: TypePath
-    ) -> Alias:
-        if fields := getattr(type_form, "__dataclass_fields__", None):
-            field = fields[name]
-            alias = field.metadata.get(self._alias_field)
-        if alias is None:
-            alias = self._default_alias_fn(name, type_form, type_path)
-        return alias
+            self._alias_resolver = AliasResolver(alias_fn)
+        else:
+            self._alias_resolver = alias_resolver_factory(alias_fn)
 
     def _resolve_alias[T](
         self, type_form: TypeForm, type_path: TypePath, name: str

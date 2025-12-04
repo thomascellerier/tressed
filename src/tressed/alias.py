@@ -11,16 +11,20 @@ __all__ = [
     "AliasResolver",
     "normalize_alias_fn",
     "identity_alias_fn",
+    "make_maybe_dataclass_alias_fn",
+    "compose_alias_fn",
     "to_camel",
     "to_pascal",
 ]
 
 if TYPE_CHECKING:
     type Alias = str
-    SimpleAliasFn = Callable[[str], Alias]
-    TypeFormAliasFn = Callable[[str, TypeForm], Alias]
-    TypePathAliasFn = Callable[[str, TypeForm, TypePath], Alias]
-    AliasFn = SimpleAliasFn | TypeFormAliasFn | TypePathAliasFn
+    type SimpleAliasFn[AliasT = Alias] = Callable[[str], AliasT]
+    type TypeFormAliasFn[AliasT = Alias] = Callable[[str, TypeForm], AliasT]
+    type TypePathAliasFn[AliasT = Alias] = Callable[[str, TypeForm, TypePath], AliasT]
+    type AliasFn[AliasT = Alias] = (
+        SimpleAliasFn[AliasT] | TypeFormAliasFn[AliasT] | TypePathAliasFn[AliasT]
+    )
 
     __all__ += [
         "Alias",
@@ -31,9 +35,9 @@ if TYPE_CHECKING:
     ]
 
 
-def normalize_alias_fn(
-    alias_fn: SimpleAliasFn | TypeFormAliasFn | AliasFn,
-) -> TypePathAliasFn:
+def normalize_alias_fn[AliasT = Alias](
+    alias_fn: SimpleAliasFn[AliasT] | TypeFormAliasFn[AliasT] | AliasFn[AliasT],
+) -> TypePathAliasFn[AliasT]:
     """
     Normalize alias fn to a type path alias fn.
     """
@@ -50,7 +54,7 @@ def normalize_alias_fn(
 
             def _type_form_alias_fn_wrapper(
                 name: str, type_form: TypeForm, type_path: TypePath
-            ) -> Alias:
+            ) -> AliasT:
                 return alias_fn(name, type_form)  # type: ignore[call-arg]
 
             return _type_form_alias_fn_wrapper
@@ -58,7 +62,7 @@ def normalize_alias_fn(
 
             def _simple_alias_fn_wrapper(
                 name: str, type_form: TypeForm, type_path: TypePath
-            ) -> Alias:
+            ) -> AliasT:
                 return alias_fn(name)  # type: ignore[call-arg]
 
             return _simple_alias_fn_wrapper
@@ -118,6 +122,41 @@ def to_pascal(name: str) -> str:
 
 def to_camel(name: str) -> str:
     return _snake_to_camel_pascal(name, str.lower, str.title)
+
+
+def make_maybe_dataclass_alias_fn(alias_field: str) -> AliasFn[Alias | None]:
+    def _maybe_dataclass_alias_fn(
+        name: str, type_form: TypeForm, type_path: TypePath
+    ) -> Alias | None:
+        if fields := getattr(type_form, "__dataclass_fields__", None):
+            field = fields[name]
+            return field.metadata.get(alias_field)
+        return None
+
+    return _maybe_dataclass_alias_fn
+
+
+def compose_alias_fn(
+    *alias_fns: AliasFn[Alias | None],
+    default_alias_fn: AliasFn[Alias] = identity_alias_fn,
+) -> TypePathAliasFn:
+    """
+    Create an alias function by composing several alias functions.
+    The functions are tried in order until an alias is returned.
+    If none of the function match, the alias is resolved using the default alias function.
+    """
+    normalized_alias_fns = [normalize_alias_fn(alias_fn) for alias_fn in alias_fns]
+    normalized_default_alias_fn = normalize_alias_fn(default_alias_fn)
+
+    def _composed_alias_fn(
+        name: str, type_form: TypeForm, type_path: TypePath
+    ) -> Alias:
+        for alias_fn in normalized_alias_fns:
+            if (alias := alias_fn(name, type_form, type_path)) is not None:
+                return alias
+        return normalized_default_alias_fn(name, type_form, type_path)
+
+    return _composed_alias_fn
 
 
 class AliasResolver:
