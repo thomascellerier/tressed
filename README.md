@@ -1,5 +1,11 @@
 # tressed
 
+<p align="center">
+<a href="https://pypi.org/project/tressed/">
+    <img src="https://badge.fury.io/py/tressed.svg" alt="Package version">
+</a>
+</p>
+
 Serialize and deserialize types, in any order.
 
 ![PyPI - Version](https://img.shields.io/pypi/v/tressed)
