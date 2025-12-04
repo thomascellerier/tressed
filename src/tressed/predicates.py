@@ -38,6 +38,10 @@ __all__ = [
     "is_typeddict",
     "is_dict_type",
     "is_namedtuple_type",
+    "is_uuid_type",
+    "is_enum_type",
+    "is_literal_type",
+    "is_type_alias_type",
 ]
 
 if TYPE_CHECKING:
@@ -183,3 +187,27 @@ def is_namedtuple_type(type_form: TypeForm) -> bool:
     ):
         return typing.NamedTuple in orig_bases
     return False
+
+
+def is_uuid_type(type_form: TypeForm) -> bool:
+    if uuid := sys.modules.get("uuid"):
+        return type_form is uuid.UUID
+    return False
+
+
+def is_enum_type(type_form: TypeForm) -> bool:
+    if enum := sys.modules.get("enum"):
+        return type(type_form) is enum.EnumType
+    return False
+
+
+def is_literal_type(type_form: TypeForm) -> bool:
+    if typing := sys.modules.get("typing"):
+        return get_origin(type_form) is typing.Literal
+    return False
+
+
+def is_type_alias_type(type_form: TypeForm) -> bool:
+    return hasattr(type_form, "__type_params__") and hasattr(
+        type_form, "evaluate_value"
+    )

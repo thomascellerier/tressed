@@ -18,8 +18,6 @@ if TYPE_CHECKING:
 # - datatime.datetime
 # - datetime.date
 # - datetime.time
-# - uuid.UUID
-# - enum.Enum
 # - Tagged union using Annotated
 
 __all__ = [
@@ -31,6 +29,7 @@ __all__ = [
     "load_newtype",
     "load_typeddict",
     "load_namedtuple",
+    "load_type_alias",
 ]
 
 if TYPE_CHECKING:
@@ -51,6 +50,22 @@ def _type_path_repr(type_path: TypePath) -> str:
 
 def _type_form_repr(type_form: TypeForm) -> str:
     if name := getattr(type_form, "__name__", None):
+        if type_params := getattr(type_form, "__type_params__", None):
+            from tressed.predicates import get_args
+
+            params = []
+
+            if args := get_args(type_form):
+                num_args = len(args)
+                for i, arg in enumerate(args):
+                    params.append(
+                        f"{_type_form_repr(type_params[i])}={_type_form_repr(arg)}"
+                    )
+            else:
+                num_args = 0
+            for type_param in type_params[num_args:]:
+                params.append(f"{_type_form_repr(type_param)}=?")
+            return f"{name}[{', '.join(params)}]"
         return name
     return repr(type_form)
 
@@ -266,3 +281,38 @@ def load_namedtuple[T](
         for key, field_value in _items(value)
     }
     return type_form(**values)
+
+
+def load_literal[T](
+    value: Any, type_form: TypeForm[T], type_path: TypePath, loader: LoaderProtocol
+) -> T:
+    from tressed.predicates import get_args
+
+    args = get_args(type_form)
+    assert args is not None
+    if value in args:
+        return value
+    raise TressedValueError(
+        f"Failed to load value {value!r} of type {_type_form_repr(type(value))} into {_type_form_repr(type_form)} "
+        f"at path {_type_path_repr(type_path)}, value should be one of: "
+        f"{', '.join(map(repr, args))}"
+    )
+
+
+def load_type_alias[T](
+    value: Any, type_form: TypeForm[T], type_path: TypePath, loader: LoaderProtocol
+) -> T:
+    evaluated_type = type_form.evaluate_value()  # type: ignore[attr-defined]
+    if (num_params := len(type_form.__type_params__)) > 0:
+        from tressed.predicates import get_args
+
+        args = get_args(type_form)
+        if args is None or len(args) < num_params:
+            raise TressedValueError(
+                f"Failed to load value of type {_type_form_repr(type(value))} into {_type_form_repr(type_form)} "
+                f"at path {_type_path_repr(type_path)}, type form should have only concrete type parameters"
+            )
+
+        evaluated_type = evaluated_type[*args]
+
+    return loader._load(value, evaluated_type, type_path)

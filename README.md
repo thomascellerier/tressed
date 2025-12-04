@@ -68,10 +68,14 @@ The following type forms are supported out of the box:
 - set[T], typing.Set[T]
 - frozenset[T], typing.FrozenSet[T]
 - dict[K, V], typing.Dict[K, V]
+- typing.Literal
+- typing.TypeAliasType
+- enum.Enum
 - typing.TypedDict, typing\_extensions.TypedDict, including support for PEP 728 closed and extra\_items.
 - dataclasses.dataclass
 - typing.NewType[T]
 - ipaddress.{IPv4Address,IPv6Address,IPv4Interface,IPv6Interface,IPv4Network,IPv6Network}
+- uuid.UUID
 
 It is easy to add support for custom types as needed when creating a loader.
 

@@ -433,3 +433,113 @@ def test_load_from_argparse_namespace() -> None:
     assert loader.load(
         Namespace(foo=[1, 1.1], bar="BAR!"), SomeNamedTuple
     ) == SomeNamedTuple(foo=(1, 1.1), bar="BAR!")
+
+
+def test_load_enum() -> None:
+    from enum import Enum, IntEnum, StrEnum, auto
+
+    class SomeEnum(Enum):
+        FOO = "foo"
+        BAR = "bar"
+
+    loader = Loader()
+    assert loader.load("foo", SomeEnum) == SomeEnum.FOO
+
+    class SomeStrEnum(StrEnum):
+        FOO = auto()
+        BAR = auto()
+
+    assert loader.load("bar", SomeStrEnum) == SomeStrEnum.BAR
+
+    class SomeIntEnum(IntEnum):
+        FOO = auto()
+        BAR = auto()
+
+    assert loader.load(1, SomeIntEnum) == SomeIntEnum.FOO
+
+
+def test_load_uuid() -> None:
+    import uuid
+
+    loader = Loader()
+
+    # uuid1
+    assert loader.load("417c0ae2-d114-11f0-b300-d7c04d362c1f", uuid.UUID) == uuid.UUID(
+        "417c0ae2-d114-11f0-b300-d7c04d362c1f"
+    )
+    # uuid4
+    assert loader.load("c932f581-6430-4ae1-ad63-85489a0206b2", uuid.UUID) == uuid.UUID(
+        "c932f581-6430-4ae1-ad63-85489a0206b2"
+    )
+    # uuid6
+    assert loader.load("1f0d1144-17c1-6152-a18b-98af65b3c73e", uuid.UUID) == uuid.UUID(
+        "1f0d1144-17c1-6152-a18b-98af65b3c73e"
+    )
+    # uuid7
+    assert loader.load("019ae987-1dc6-770d-88c2-ec9b62f79444", uuid.UUID) == uuid.UUID(
+        "019ae987-1dc6-770d-88c2-ec9b62f79444"
+    )
+
+
+def test_load_literal() -> None:
+    from typing import Literal
+
+    loader = Loader()
+
+    Foo = Literal[1, 2, 3, "foo"]
+    assert loader.load(2, Foo) == 2
+    assert loader.load("foo", Foo) == "foo"
+    with pytest.raises(TressedValueError) as exc_info:
+        loader.load(5, Foo)
+    assert (
+        str(exc_info.value)
+        == "Failed to load value 5 of type int into Literal at path ., value should be one of: 1, 2, 3, 'foo'"
+    )
+
+
+def test_load_type_alias() -> None:
+    from typing import Literal
+
+    loader = Loader()
+
+    type TruthyLiteral = Literal[True, "true", "t", "yes", "y", "1"]
+    type IntPair = tuple[int, int]
+    assert loader.load("yes", TruthyLiteral) == "yes"
+    assert loader.load([1, 2], IntPair) == (1, 2)
+
+
+def test_load_generic_type_alias() -> None:
+    loader = Loader()
+
+    type Pair[T] = tuple[T, T]
+    type IntPair = Pair[int]
+    type StrPair = Pair[str]
+
+    assert loader.load((1, 0), IntPair) == (1, 0)
+    assert loader.load(("yes", "no"), StrPair) == ("yes", "no")
+
+    with pytest.raises(TressedValueError) as exc_info:
+        loader.load((1, 0), Pair) == (1, 0)
+    assert (
+        str(exc_info.value)
+        == "Failed to load value of type tuple into Pair[T=?] at path ., type form should have only concrete type parameters"
+    )
+
+    type SomeMapping[K, V] = dict[K, V]
+    type IntMapping[K] = dict[K, int]
+
+    assert loader.load({"foo": 1}, IntMapping[str]) == {"foo": 1}
+
+    with pytest.raises(TressedValueError) as exc_info:
+        loader.load({"foo": 1}, IntMapping)
+    assert (
+        str(exc_info.value)
+        == "Failed to load value of type dict into IntMapping[K=?] at path ., type form should have only concrete type parameters"
+    )
+
+    with pytest.raises(TressedValueError) as exc_info:
+        loader.load({"foo": 1}, SomeMapping[int])  # type: ignore[arg-type]
+    assert (
+        str(exc_info.value)
+        == "Failed to load value of type dict into SomeMapping[K=int, V=?] at path ., type form should have only concrete type parameters"
+    )

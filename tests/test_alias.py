@@ -1,7 +1,6 @@
-from tressed.alias import AliasResolver, compose_alias_fn, to_camel, to_pascal
-
-
 def test_to_camel() -> None:
+    from tressed.alias import to_camel
+
     assert to_camel("foo_bar") == "fooBar"
     assert to_camel("foo") == "foo"
     assert to_camel("_foo") == "_foo"
@@ -12,6 +11,8 @@ def test_to_camel() -> None:
 
 
 def test_to_pascal() -> None:
+    from tressed.alias import to_pascal
+
     assert to_pascal("foo_bar") == "FooBar"
     assert to_pascal("foo") == "Foo"
     assert to_pascal("_foo") == "_Foo"
@@ -22,6 +23,8 @@ def test_to_pascal() -> None:
 
 
 def test_compose_alias_fn() -> None:
+    from tressed.alias import compose_alias_fn
+
     def maybe_alias(name: str) -> str | None:
         match name:
             case "foo":
@@ -52,6 +55,8 @@ def test_compose_alias_fn() -> None:
 
 
 def test_alias_resolver() -> None:
+    from tressed.alias import AliasResolver
+
     # Simple alias
     alias_resolver = AliasResolver(alias_fn=lambda s: s.upper())
     assert alias_resolver.resolve("FooBar", int, ()) == "FOOBAR"
@@ -72,6 +77,8 @@ def test_alias_resolver() -> None:
 
 
 def test_alias_resolver_caching_enabled() -> None:
+    from tressed.alias import AliasResolver
+
     count = 0
 
     def count_alias(_: str) -> str:
@@ -89,6 +96,8 @@ def test_alias_resolver_caching_enabled() -> None:
 
 
 def test_alias_resolver_caching_disabled() -> None:
+    from tressed.alias import AliasResolver
+
     count = 0
 
     def count_alias(_: str) -> str:
