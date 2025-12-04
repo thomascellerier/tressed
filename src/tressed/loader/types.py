@@ -7,8 +7,7 @@ if TYPE_CHECKING:
 
     from typing_extensions import TypeForm
 
-    type TypePathItem = str | int
-    type TypePath = tuple[TypePathItem, ...]
+    from tressed.type_path import TypePath
 
     class LoaderProtocol(Protocol):
         def _load[T](
@@ -22,8 +21,6 @@ if TYPE_CHECKING:
     type TypeLoaderSpecializer[T] = Callable[[TypeForm[T], TypePath], str | None]
 
     __all__ += [
-        "TypePathItem",
-        "TypePath",
         "LoaderProtocol",
         "TypeLoaderFn",
         "TypeLoaderSpecializer",

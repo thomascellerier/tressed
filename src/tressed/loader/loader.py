@@ -8,9 +8,10 @@ from tressed.exceptions import TressedTypeError, TressedValueError
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import Callable, Mapping
     from typing import Any, Final
 
+    from tressed.alias import AliasFn, AliasResolver
     from tressed.loader.types import TypeLoaderFn, TypePath
     from tressed.predicates import TypePredicate
 
@@ -99,6 +100,8 @@ class Loader:
         type_mappers: Mapping[TypePredicate, TypeLoaderFn] | None = None,
         enable_specialization: bool = False,
         alias_field: str = "alias",
+        alias_fn: AliasFn | None = None,
+        alias_resolver_factory: Callable[[AliasFn], AliasResolver] | None = None,
     ) -> None:
         # Map a type to its loader
         if type_loaders is None:
@@ -114,31 +117,35 @@ class Loader:
         else:
             self._type_mappers = dict(type_mappers)
 
-        self._alias_field: Final = alias_field
-        # Mapping of (type, type_form, name) to alias
-        self._alias_cache: dict[tuple[TypeForm, TypePath, str], Alias] = {}
+        from tressed.alias import AliasResolver, identity_alias_fn, normalize_alias_fn
 
-    def _resolve_alias_no_cache[T](
-        self, type_form: TypeForm, type_path: TypePath, name: str
+        if alias_fn is None:
+            alias_fn = identity_alias_fn
+
+        self._alias_field: Final = alias_field
+        self._default_alias_fn = normalize_alias_fn(alias_fn)
+
+        if alias_resolver_factory is None:
+
+            def alias_resolver_factory(alias_fn: AliasFn) -> AliasResolver:
+                return AliasResolver(alias_fn=alias_fn, cache_resolved_aliases=True)
+
+        self._alias_resolver = alias_resolver_factory(self._alias_fn)
+
+    def _alias_fn[T](
+        self, name: str, type_form: TypeForm, type_path: TypePath
     ) -> Alias:
-        # TODO: Also have a type mapper for alias resolvers
         if fields := getattr(type_form, "__dataclass_fields__", None):
             field = fields[name]
             alias = field.metadata.get(self._alias_field)
         if alias is None:
-            return name
+            alias = self._default_alias_fn(name, type_form, type_path)
         return alias
 
     def _resolve_alias[T](
-        self, type_form: TypeForm[T], type_path: TypePath, name: str
+        self, type_form: TypeForm, type_path: TypePath, name: str
     ) -> Alias:
-        cache_key = (type_form, type_path, name)
-        if (alias := self._alias_cache.get(cache_key)) is not None:
-            return alias
-
-        alias = self._resolve_alias_no_cache(type_form, type_path, name)
-        self._alias_cache[cache_key] = alias
-        return alias
+        return self._alias_resolver.resolve(name, type_form, type_path)
 
     def _load[T](self, value: Any, type_form: TypeForm[T], type_path: TypePath) -> T:
         if (type_loader := self._type_loaders.get(type_form)) is None:

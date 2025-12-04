@@ -5,7 +5,8 @@ if TYPE_CHECKING:
 
     from typing_extensions import TypeForm
 
-    from tressed.loader.types import TypeLoaderFn, TypePath, TypePathItem
+    from tressed.loader.types import TypeLoaderFn
+    from tressed.type_path import TypePath, TypePathItem
 
 __all__ = [
     "specialize_load_tuple",

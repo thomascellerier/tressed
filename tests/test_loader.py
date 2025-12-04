@@ -1,7 +1,6 @@
 import gc
 import sys
 from typing import NewType, assert_type
-from unittest.mock import call
 
 import pytest
 from pytest_benchmark.fixture import BenchmarkFixture
@@ -186,40 +185,123 @@ def test_load_dataclass(mocker: MockerFixture) -> None:
         baz=[1, 2, 3],
         bar_bar=(2, "humbug"),
     )
-    expected_cache = {
-        (SomeDataclass, (), "foo"): "foo",
-        (SomeDataclass, (), "bar"): "bar",
-        (SomeDataclass, (), "baz"): "baz",
-        (SomeDataclass, (), "bar_bar"): "barBar",
+    loader = Loader()
+    assert loader.load(value, SomeDataclass) == expected
+
+    assert loader._alias_resolver._cache == {
+        ("foo", SomeDataclass, ()): "foo",
+        ("bar", SomeDataclass, ()): "bar",
+        ("baz", SomeDataclass, ()): "baz",
+        ("bar_bar", SomeDataclass, ()): "barBar",
     }
 
-    loader = Loader()
 
-    spy_resolve_alias = mocker.spy(loader, loader._resolve_alias.__name__)
-    spy_resolve_alias_no_cache = mocker.spy(
-        loader, loader._resolve_alias_no_cache.__name__
+def test_load_dataclass_caching_enabled(mocker: MockerFixture) -> None:
+    from dataclasses import dataclass, field
+
+    @dataclass
+    class SomeDataclass:
+        foo: str
+        bar: str = "bar"
+        baz: list[int] = field(default_factory=lambda: [1, 2, 3])
+        bar_bar: tuple[int, str] = field(metadata={"alias": "barBar"}, kw_only=True)
+
+    count = 0
+
+    def _count_alias_fn(name: str) -> str:
+        nonlocal count
+        count += 1
+        return name
+
+    value = {
+        "foo": "foo",
+        "barBar": (2, "humbug"),
+    }
+    expected = SomeDataclass(
+        foo="foo",
+        bar="bar",
+        baz=[1, 2, 3],
+        bar_bar=(2, "humbug"),
     )
+    loader = Loader(alias_fn=_count_alias_fn)
+    assert loader.load(value, SomeDataclass) == expected
+    assert count == 3
 
     assert loader.load(value, SomeDataclass) == expected
+    assert count == 3
 
-    # First, call make sure that the cache is created
-    assert loader._alias_cache == expected_cache
 
-    expected_calls = [
-        call(SomeDataclass, (), "foo"),
-        call(SomeDataclass, (), "bar"),
-        call(SomeDataclass, (), "baz"),
-        call(SomeDataclass, (), "bar_bar"),
-    ]
-    assert spy_resolve_alias.call_args_list == expected_calls
-    assert spy_resolve_alias_no_cache.call_args_list == expected_calls
+def test_load_dataclass_caching_disabled(mocker: MockerFixture) -> None:
+    from dataclasses import dataclass, field
+
+    from tressed.alias import AliasResolver
+
+    @dataclass
+    class SomeDataclass:
+        foo: str
+        bar: str = "bar"
+        baz: list[int] = field(default_factory=lambda: [1, 2, 3])
+        bar_bar: tuple[int, str] = field(metadata={"alias": "barBar"}, kw_only=True)
+
+    count = 0
+
+    def _count_alias_fn(name: str) -> str:
+        nonlocal count
+        count += 1
+        return name
+
+    value = {
+        "foo": "foo",
+        "barBar": (2, "humbug"),
+    }
+    expected = SomeDataclass(
+        foo="foo",
+        bar="bar",
+        baz=[1, 2, 3],
+        bar_bar=(2, "humbug"),
+    )
+    loader = Loader(
+        alias_fn=_count_alias_fn,
+        alias_resolver_factory=lambda alias_fn: AliasResolver(
+            alias_fn, cache_resolved_aliases=False
+        ),
+    )
+    assert loader.load(value, SomeDataclass) == expected
+    assert count == 3
+    assert loader._alias_resolver._cache == {}
 
     assert loader.load(value, SomeDataclass) == expected
+    assert count == 6
+    assert loader._alias_resolver._cache == {}
 
-    # Second, call make sure that the cache is used created
-    assert loader._alias_cache == expected_cache
-    assert spy_resolve_alias.call_args_list == expected_calls * 2
-    assert spy_resolve_alias_no_cache.call_args_list == expected_calls
+
+def test_load_dataclass_alias_fn(mocker: MockerFixture) -> None:
+    from dataclasses import dataclass, field
+
+    from tressed.alias import to_camel
+
+    @dataclass
+    class SomeDataclass:
+        foo_foo: str
+        baz_baz: list[int] = field(default_factory=lambda: [1, 2, 3])
+        bar_bar: tuple[int, str] = field(metadata={"alias": "BAR_BAR"}, kw_only=True)
+
+    value = {
+        "fooFoo": "foo",
+        "BAR_BAR": (2, "humbug"),
+    }
+    expected = SomeDataclass(
+        foo_foo="foo",
+        baz_baz=[1, 2, 3],
+        bar_bar=(2, "humbug"),
+    )
+    loader = Loader(alias_fn=to_camel)
+    assert loader.load(value, SomeDataclass) == expected
+    assert loader._alias_resolver._cache == {
+        ("foo_foo", SomeDataclass, ()): "fooFoo",
+        ("baz_baz", SomeDataclass, ()): "bazBaz",
+        ("bar_bar", SomeDataclass, ()): "BAR_BAR",
+    }
 
 
 def test_load_dict() -> None:
