@@ -6,6 +6,8 @@ authors = [
 version = "0.0.2"
 description = "Deserialize and serialize types, in any order"
 readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.14"
 dependencies = []
 
