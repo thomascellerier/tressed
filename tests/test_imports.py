@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 
 
-def test_import_tressed(tmp_path: Path) -> None:
+def test_lazy_imports(tmp_path: Path) -> None:
     """
     Make sure tressed uses lazy imports by default.
     Note that this is not fully reliable as pytest itself already loads a ton of modules.
