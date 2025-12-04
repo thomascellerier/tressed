@@ -1,6 +1,9 @@
 # tressed
 
 <p align="center">
+<a href="https://github.com/thomascellerier/tressed/actions/workflows/test.yaml">
+    <image src="https://github.com/github/docs/actions/workflows/test.yml/badge.svg">
+</a>
 <a href="https://pypi.org/project/tressed/">
     <img src="https://badge.fury.io/py/tressed.svg" alt="Package version">
 </a>
