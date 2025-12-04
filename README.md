@@ -2,6 +2,8 @@
 
 Serialize and deserialize types, in any order.
 
+![PyPI - Version](https://img.shields.io/pypi/v/tressed)
+
 ## Usage
 
 ```Python
