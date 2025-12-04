@@ -49,7 +49,10 @@ SomeDataclass(some_field='foo',
 ```
 
 ## Features
+
 ### Supported type forms
+
+Tressed uses the proposed [PEP 747](https://peps.python.org/pep-0747/) `TypeForm` combined with [mypy 1.19](https://mypy.readthedocs.io/en/stable/changelog.html#pep-747-annotating-type-forms) to provide accurate types for the `Loader.load` function.
 
 The following type forms are supported out of the box:
 
