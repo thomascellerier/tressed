@@ -1,4 +1,4 @@
-<p align="center"><strong>tressed</strong> <em>- Serialize and deserialize types, in any order.</em></p>
+<p align="center"><strong>tressed</strong> <em>- Deserialize and serialize types, in any order.</em></p>
 
 <p align="center">
 <a href="https://github.com/thomascellerier/tressed/actions/workflows/test.yaml">
