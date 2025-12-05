@@ -9,7 +9,6 @@ from pytest_mock import MockerFixture
 from tressed.exceptions import (
     TressedTypeError,
     TressedValueError,
-    TressedValueErrorGroup,
 )
 from tressed.loader import Loader
 
@@ -377,9 +376,9 @@ def test_load_typeddict_closed() -> None:
             {"foo": 123, "bar": "bar", "buz": "BUZ", "baz": "BAZ"}, SomeTypedDict
         )
 
-    assert (
-        str(exc_info.value)
-        == "Failed to load value of type dict into SomeTypedDict at path ., extra keys 'bar', 'baz', 'buz': {'foo': 123, 'bar': 'bar', 'buz': 'BUZ', 'baz': 'BAZ'}"
+    assert str(exc_info.value) == (
+        "Failed to load value of type dict at path . into type SomeTypedDict: "
+        "extra keys 'bar', 'baz', 'buz': {'foo': 123, 'bar': 'bar', 'buz': 'BUZ', 'baz': 'BAZ'}"
     )
 
 
@@ -495,9 +494,9 @@ def test_load_literal() -> None:
     assert loader.load("foo", Foo) == "foo"
     with pytest.raises(TressedValueError) as exc_info:
         loader.load(5, Foo)
-    assert (
-        str(exc_info.value)
-        == "Failed to load value 5 of type int into Literal[1, 2, 3, 'foo'] at path ., value should be one of: 1, 2, 3, 'foo'"
+    assert str(exc_info.value) == (
+        "Failed to load value of type int at path . into type Literal[1, 2, 3, 'foo']: "
+        "got value 5 but expected one of: 1, 2, 3, 'foo'"
     )
 
 
@@ -526,7 +525,7 @@ def test_load_generic_type_alias() -> None:
         loader.load((1, 0), Pair) == (1, 0)
     assert (
         str(exc_info.value)
-        == "Failed to load value of type tuple into Pair[T=?] at path ., type form should have only concrete type parameters"
+        == "Failed to load value of type tuple at path . into type Pair[T=?]: type form should have only concrete type parameters"
     )
 
     type SomeMapping[K, V] = dict[K, V]
@@ -538,14 +537,14 @@ def test_load_generic_type_alias() -> None:
         loader.load({"foo": 1}, IntMapping)
     assert (
         str(exc_info.value)
-        == "Failed to load value of type dict into IntMapping[K=?] at path ., type form should have only concrete type parameters"
+        == "Failed to load value of type dict at path . into type IntMapping[K=?]: type form should have only concrete type parameters"
     )
 
     with pytest.raises(TressedValueError) as exc_info:
         loader.load({"foo": 1}, SomeMapping[int])  # type: ignore[arg-type]
     assert (
         str(exc_info.value)
-        == "Failed to load value of type dict into SomeMapping[K=int, V=?] at path ., type form should have only concrete type parameters"
+        == "Failed to load value of type dict at path . into type SomeMapping[K=int, V=?]: type form should have only concrete type parameters"
     )
 
 
@@ -589,15 +588,15 @@ def test_load_union() -> None:
     assert loader.load(1, int | str) == 1
     assert loader.load("foo", int | str) == "foo"
 
-    with pytest.raises(TressedValueErrorGroup) as exc_info:
+    with pytest.raises(TressedValueError) as exc_info:
         loader.load([1, 2], int | str)
     assert (
         str(exc_info.value)
-        == "Failed to load value of type list at path . into union type int | str (2 sub-exceptions)"
+        == "Failed to load value of type list at path . into type int | str (2 sub-exceptions)"
     )
     assert [str(e) for e in exc_info.value.exceptions] == [
-        "Cannot load value [1, 2] at path . into int",
-        "Cannot load value [1, 2] at path . into str",
+        "Failed to load value of type list at path . into type int",
+        "Failed to load value of type list at path . into type str",
     ]
 
 
@@ -609,15 +608,15 @@ def test_load_legacy_union() -> None:
     assert loader.load(1, Union[int, str]) == 1
     assert loader.load("foo", Union[int, str]) == "foo"
 
-    with pytest.raises(TressedValueErrorGroup) as exc_info:
+    with pytest.raises(TressedValueError) as exc_info:
         loader.load([1, 2], Union[int, str])
     assert (
         str(exc_info.value)
-        == "Failed to load value of type list at path . into union type int | str (2 sub-exceptions)"
+        == "Failed to load value of type list at path . into type int | str (2 sub-exceptions)"
     )
     assert [str(e) for e in exc_info.value.exceptions] == [
-        "Cannot load value [1, 2] at path . into int",
-        "Cannot load value [1, 2] at path . into str",
+        "Failed to load value of type list at path . into type int",
+        "Failed to load value of type list at path . into type str",
     ]
 
 

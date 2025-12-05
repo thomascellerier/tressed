@@ -1,9 +1,8 @@
 import sys
 
-from tressed.exceptions import TressedValueError, TressedValueErrorGroup
+from tressed.exceptions import TressedValueError
 from tressed.predicates import get_args, get_origin
 from tressed.type_form import type_form_repr
-from tressed.type_path import type_path_repr
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
@@ -69,7 +68,9 @@ def load_identity[T](
     if type(value) is type_form:
         return value
     raise TressedValueError(
-        f"Cannot load value {value!r} at path {type_path_repr(type_path)} into {type_form_repr(type_form)}"
+        value,
+        type_form,
+        type_path,
     )
 
 
@@ -94,7 +95,9 @@ def load_float[T](
     if type_ is int:
         return type_form(value)  # type: ignore[call-arg]
     raise TressedValueError(
-        f"Cannot load value {value!r} at path {type_path_repr(type_path)} into {type_form_repr(type_form)}"
+        value,
+        type_form,
+        type_path,
     )
 
 
@@ -134,8 +137,10 @@ def load_simple_collection[T](
     args = get_args(type_form)
     if origin is None or args is None or len(args) != num_expected_args:
         raise TressedValueError(
-            f"Cannot load value {value!r} at path {type_path_repr(type_path)}, "
-            f"{type_form_repr(type_form)} is not a homogeneous generic type"
+            value,
+            type_form,
+            type_path,
+            f"{type_form_repr(type_form)} is not a homogeneous generic type",
         )
 
     item_type = args[0]
@@ -152,8 +157,10 @@ def load_tuple[T](
     args = get_args(type_form)
     if origin is None or args is None:
         raise TressedValueError(
-            f"Cannot load value {value!r} at path {type_path_repr(type_path)}, "
-            f"{getattr(type_form, '__name__', type_form)} is not a generic type"
+            value,
+            type_form,
+            type_path,
+            f"{getattr(type_form, '__name__', type_form)} is not a generic type",
         )
 
     return tuple(  # type: ignore[return-value]
@@ -229,16 +236,18 @@ def load_typeddict[T](
 
     if missing_keys := (required_keys - values.keys()):
         raise TressedValueError(
-            f"Failed to load value of type {type_form_repr(type(value))} into {type_form_repr(type_form)} "
-            f"at path {type_path_repr(type_path)}, "
-            f"missing required keys {', '.join(map(repr, missing_keys))}: {value}"
+            value,
+            type_form,
+            type_path,
+            f"missing required keys {', '.join(map(repr, missing_keys))}: {value}",
         )
 
     if extra_keys:
         raise TressedValueError(
-            f"Failed to load value of type {type_form_repr(type(value))} into {type_form_repr(type_form)} "
-            f"at path {type_path_repr(type_path)}, "
-            f"extra keys {', '.join(sorted(map(repr, extra_keys)))}: {value}"
+            value,
+            type_form,
+            type_path,
+            f"extra keys {', '.join(sorted(map(repr, extra_keys)))}: {value}",
         )
 
     return values  # type: ignore[return-value]
@@ -265,9 +274,10 @@ def load_literal[T](
     if value in args:
         return value
     raise TressedValueError(
-        f"Failed to load value {value!r} of type {type_form_repr(type(value))} into {type_form_repr(type_form)} "
-        f"at path {type_path_repr(type_path)}, value should be one of: "
-        f"{', '.join(map(repr, args))}"
+        value,
+        type_form,
+        type_path,
+        f"got value {repr(value)} but expected one of: {', '.join(map(repr, args))}",
     )
 
 
@@ -279,8 +289,10 @@ def load_type_alias[T](
         args = get_args(type_form)
         if args is None or len(args) < num_params:
             raise TressedValueError(
-                f"Failed to load value of type {type_form_repr(type(value))} into {type_form_repr(type_form)} "
-                f"at path {type_path_repr(type_path)}, type form should have only concrete type parameters"
+                value,
+                type_form,
+                type_path,
+                "type form should have only concrete type parameters",
             )
 
         evaluated_type = evaluated_type[*args]
@@ -322,11 +334,11 @@ def load_union[T](
             errors.append(error)
 
     assert args, "unreachable"
-    raise TressedValueErrorGroup(
-        f"Failed to load value of type {type_form_repr(type(value))} "
-        f"at path {type_path_repr(type_path)} "
-        f"into union type {type_form_repr(type_form)}",
-        errors,
+    raise TressedValueError(
+        value,
+        type_form,
+        type_path,
+        exceptions=errors,
     )
 
 

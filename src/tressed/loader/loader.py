@@ -171,9 +171,7 @@ class Loader:
             else:
                 type_loader = None
             if type_loader is None:
-                raise TressedTypeError(
-                    f"Unhandled type form {type_form!r} at path {type_path!r} for value {value!r}"
-                )
+                raise TressedTypeError(value, type_form, type_path)
 
             # Cache lookup for next time
             self._type_loaders[type_form] = type_loader
@@ -183,9 +181,7 @@ class Loader:
         except TressedValueError:
             raise
         except Exception as e:
-            error = TressedValueError(
-                f"Failed to load value {value!r} at path {type_path!r} into type form {type_form!r}"
-            )
+            error = TressedValueError(value, type_form, type_path)
             error.add_note(f"{type(e)}: {e}")
             raise error from e
 

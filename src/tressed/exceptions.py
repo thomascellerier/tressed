@@ -1,12 +1,15 @@
 TYPE_CHECKING = False
 if TYPE_CHECKING:
-    pass
+    from collections.abc import Sequence
+    from typing import Any, NoReturn
+
+    from tressed.type_form import TypeForm
+    from tressed.type_path import TypePath
 
 __all__ = [
     "TressedError",
     "TressedTypeError",
     "TressedValueError",
-    "TressedValueErrorGroup",
 ]
 
 
@@ -15,12 +18,59 @@ class TressedError(Exception):
 
 
 class TressedTypeError(TressedError, TypeError):
-    pass
+    def __init__(self, value: Any, type_form: TypeForm, type_path: TypePath) -> None:
+        self.value = value
+        self.type_form = type_form
+        self.type_path = type_path
+        super(TypeError, self).__init__(type_form)
+
+    def __str__(self) -> str:
+        from tressed.type_form import type_form_repr
+        from tressed.type_path import type_path_repr
+
+        return (
+            f"Unhandled type form {type_form_repr(self.type_form)} "
+            f"at path {type_path_repr(self.type_path)} "
+            f"for value {self.value!r}"
+        )
 
 
 class TressedValueError(TressedError, ValueError):
-    pass
+    def __init__(
+        self,
+        value: Any,
+        type_form: TypeForm,
+        type_path: TypePath,
+        message: str = "",
+        exceptions: Sequence[TressedValueError] = (),
+    ) -> None:
+        self.value = value
+        self.type_form = type_form
+        self.type_path = type_path
+        self.message = message
+        self.exceptions = exceptions
+        super(ValueError, self).__init__(value)
 
+    def __str__(self) -> str:
+        from tressed.type_form import type_form_repr
+        from tressed.type_path import type_path_repr
 
-class TressedValueErrorGroup(ExceptionGroup[TressedValueError], TressedValueError):
-    pass
+        value = (
+            f"Failed to load value of type {type_form_repr(type(self.value))} "
+            f"at path {type_path_repr(self.type_path)} "
+            f"into type {type_form_repr(self.type_form)}"
+        )
+        if self.message:
+            value += f": {self.message}"
+        if self.exceptions:
+            value += f" ({len(self.exceptions)} sub-exceptions)"
+        return value
+
+    def raise_exception_group(self) -> NoReturn:
+        """
+        Raise as exception group.
+        """
+        raise ExceptionGroup(
+            str(self),
+            self.exceptions,
+        )
