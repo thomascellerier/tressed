@@ -46,6 +46,7 @@ __all__ = [
     "is_union_type",
     "is_fspath_type",
     "is_datetime_type",
+    "is_discriminated_union",
 ]
 
 if TYPE_CHECKING:
@@ -60,13 +61,13 @@ if TYPE_CHECKING:
     ]
 
 
-def get_origin(type_form: TypeForm) -> type | None:
+def get_origin(type_form: TypeForm) -> TypeForm | None:
     # Avoid importing typing module if possible.
     # TODO: Handle annotated, generic etc...
     return getattr(type_form, "__origin__", None)
 
 
-def get_args(type_form: TypeForm) -> tuple[type, ...] | None:
+def get_args(type_form: TypeForm) -> tuple[TypeForm, ...] | None:
     # Avoid importing typing module if possible.
     # TODO: Handle annotated, generic etc...
     return getattr(type_form, "__args__", None)
@@ -272,4 +273,27 @@ def is_fspath_type(type_form: TypeForm) -> bool:
 def is_datetime_type(type_form: TypeForm) -> bool:
     if datetime := sys.modules.get("datetime"):
         return type_form in frozenset({datetime.datetime, datetime.date, datetime.time})
+    return False
+
+
+def is_discriminated_union(type_form: TypeForm) -> bool:
+    """
+    A discriminated union is a union annotated by one discriminator.
+    """
+    if not hasattr(type_form, "__metadata__"):
+        return False
+
+    if discriminated_union := sys.modules.get("tressed.discriminated_union"):
+        args = get_args(type_form)
+        assert args
+        (arg,) = args
+        if not is_union_type(arg):
+            return False
+
+        num_discriminators = sum(
+            1
+            for metadata in type_form.__metadata__
+            if isinstance(metadata, discriminated_union.Discriminator)
+        )
+        return num_discriminators == 1
     return False

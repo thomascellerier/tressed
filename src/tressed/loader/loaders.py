@@ -1,7 +1,7 @@
 import sys
 
 from tressed.exceptions import TressedValueError
-from tressed.predicates import get_args, get_origin
+from tressed.predicates import get_args, get_origin, is_union_type
 from tressed.type_form import type_form_repr
 
 TYPE_CHECKING = False
@@ -12,11 +12,6 @@ if TYPE_CHECKING:
     from typing_extensions import TypeForm
 
     from tressed.loader.types import LoaderProtocol, TypePath
-
-# TODO:
-# Tagged union using Annotated:
-#
-# Annotated[T1 | ... | Tn, Discriminator(...)]
 
 __all__ = [
     "load_identity",
@@ -35,6 +30,7 @@ __all__ = [
     "load_optional",
     "load_union",
     "load_datetime",
+    "load_discriminated_union",
 ]
 
 if TYPE_CHECKING:
@@ -346,3 +342,32 @@ def load_datetime[T](
     value: Any, type_form: TypeForm[T], type_path: TypePath, loader: LoaderProtocol
 ) -> T:
     return type_form.fromisoformat(value)  # type: ignore[attr-defined]
+
+
+def load_discriminated_union[T](
+    value: Any, type_form: TypeForm[T], type_path: TypePath, loader: LoaderProtocol
+) -> T:
+    from tressed.discriminated_union import Discriminator
+
+    args = get_args(type_form)
+    assert args is not None, "unreachable"
+
+    union_type = next(arg for arg in args if is_union_type(arg))
+    union_args = get_args(union_type)
+    assert union_args
+
+    discriminator = next(
+        metadata
+        for metadata in type_form.__metadata__  # type: ignore[attr-defined]
+        if isinstance(metadata, Discriminator)
+    )
+
+    matched_type_form = discriminator.match(value, *union_args)
+    if matched_type_form is None:
+        raise TressedValueError(
+            value,
+            type_form,
+            type_path,
+            "value did not match discriminated union discriminant",
+        )
+    return loader._load(value, matched_type_form, type_path)

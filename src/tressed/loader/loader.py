@@ -39,6 +39,7 @@ def _default_type_mappers(specialize: bool) -> Mapping[TypePredicate, TypeLoader
         load_dataclass,
         load_datetime,
         load_dict,
+        load_discriminated_union,
         load_literal,
         load_namedtuple,
         load_newtype,
@@ -54,6 +55,7 @@ def _default_type_mappers(specialize: bool) -> Mapping[TypePredicate, TypeLoader
         is_dataclass_type,
         is_datetime_type,
         is_dict_type,
+        is_discriminated_union,
         is_enum_type,
         is_frozenset_type,
         is_fspath_type,
@@ -100,6 +102,7 @@ def _default_type_mappers(specialize: bool) -> Mapping[TypePredicate, TypeLoader
         is_optional_type: load_optional,
         # NOTE: Union has to be after optional, since optionals of the form T | None are also unions.
         is_union_type: load_union,
+        is_discriminated_union: load_discriminated_union,
         is_newtype: load_newtype,
         is_typeddict: load_typeddict,
         is_dataclass_type: load_dataclass,

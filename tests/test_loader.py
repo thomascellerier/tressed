@@ -12,6 +12,12 @@ from tressed.exceptions import (
 )
 from tressed.loader import Loader
 
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from typing import Any
+
+    from tressed.type_form import TypeForm
+
 
 def test_load_identity() -> None:
     loader = Loader()
@@ -650,4 +656,94 @@ def test_load_datetime() -> None:
     )
     assert loader.load("2025-12-29T12:45:59+02:00", datetime) == datetime(
         2025, 12, 29, 12, 45, 59, tzinfo=timezone(timedelta(seconds=7200))
+    )
+
+
+def test_load_discriminated_union_first_match() -> None:
+    from typing import Annotated, Literal, NamedTuple, get_args, get_type_hints
+
+    from tressed.discriminated_union import Discriminator
+
+    class Foo(NamedTuple):
+        tag: Literal["foo"]
+        field1: str
+        field2: int
+        field4: tuple[int, int] = (6, 6)
+
+    class Bar(NamedTuple):
+        tag: Literal["bar", "BAR"]
+        field2: int
+        field3: float
+        field5: tuple[int, int] = (6, 7)
+
+    loader = Loader()
+
+    def _match_tag(value: Any, type_form: TypeForm) -> bool:
+        tags = get_args(get_type_hints(type_form)["tag"])
+        return value["tag"] in tags
+
+    type TaggedUnion = Annotated[Foo | Bar, Discriminator(_match_tag)]
+
+    assert loader.load(
+        {"tag": "foo", "field1": "hej", "field2": 123}, TaggedUnion
+    ) == Foo(tag="foo", field1="hej", field2=123, field4=(6, 6))
+    assert loader.load(
+        {"tag": "bar", "field2": 123, "field3": 1.23}, TaggedUnion
+    ) == Bar(tag="bar", field2=123, field3=1.23, field5=(6, 7))
+    assert loader.load(
+        {"tag": "BAR", "field2": 123, "field3": 1.23}, TaggedUnion
+    ) == Bar(tag="BAR", field2=123, field3=1.23, field5=(6, 7))
+    with pytest.raises(TressedValueError) as exc_info:
+        loader.load({"tag": "baz", "field2": 123, "field3": 1.23}, TaggedUnion)
+    assert (
+        str(exc_info.value)
+        == "Failed to load value of type dict at path . into type Annotated[Foo | Bar]: value did not match discriminated union discriminant"
+    )
+
+
+def test_load_discriminated_union_best_match() -> None:
+    from typing import Annotated, NamedTuple
+
+    from tressed.discriminated_union import Discriminator
+
+    class Foo(NamedTuple):
+        field1: str
+        field2: int
+        field4: tuple[int, int] = (6, 6)
+
+    class Bar(NamedTuple):
+        field2: int
+        field3: float
+        field5: tuple[int, int] = (6, 7)
+
+    loader = Loader()
+
+    def _match_num_fields(value: Any, type_form: TypeForm) -> int:
+        print(f"{value=} {type_form=} {set(type_form._fields) & set(value.keys())=}")
+        return len(set(type_form._fields) & set(value.keys()))
+
+    type BestUnion = Annotated[
+        Foo | Bar, Discriminator(_match_num_fields, strategy="best-match")
+    ]
+
+    assert loader.load({"field1": "foo", "field2": 123}, BestUnion) == Foo(
+        field1="foo", field2=123, field4=(6, 6)
+    )
+    assert loader.load({"field2": 123, "field3": 6.7}, BestUnion) == Bar(
+        field2=123, field3=6.7, field5=(6, 7)
+    )
+
+    with pytest.raises(TressedValueError) as exc_info:
+        loader.load({"foo": "bar"}, BestUnion)
+    assert (
+        str(exc_info.value)
+        == "Failed to load value of type dict at path . into type Annotated[Foo | Bar]: value did not match discriminated union discriminant"
+    )
+
+    # ambiguous
+    with pytest.raises(TressedValueError) as exc_info:
+        loader.load({"field2": "bar"}, BestUnion)
+    assert (
+        str(exc_info.value)
+        == "Failed to load value of type dict at path . into type Annotated[Foo | Bar]: value did not match discriminated union discriminant"
     )

@@ -72,6 +72,7 @@ The following type forms are supported out of the box:
 - `typing.TypeAliasType`
 - `T | None`, `typing.Optional[T]`
 - `T1 | .. | Tn`, `typing.Union[T1, .., Tn]` (Untagged Union)
+- `Annotated[T1 | ... | Tn, Discriminator(...)]` (Discriminated Union)
 - `enum.Enum`
 - `typing.TypedDict`, `typing_extensions.TypedDict` (including support for PEP 728 `closed` and `extra_items`)
 - `dataclasses.dataclass`
