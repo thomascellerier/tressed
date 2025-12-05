@@ -62,8 +62,8 @@ class Codegen:
         self._emit_newline()
 
     def emit_unpack_args(
-        self, ident: str, args: tuple[type, ...]
-    ) -> tuple[tuple[str, type], ...]:
+        self, ident: str, args: tuple[TypeForm, ...]
+    ) -> tuple[tuple[str, TypeForm], ...]:
         # TODO: Allocate identifiers!
         items = tuple((f"_item_{pos}", type_form) for pos, type_form in enumerate(args))
         match items:
@@ -85,7 +85,7 @@ class Codegen:
         self,
         loader_ident: str,
         ident: str,
-        type_form: type,
+        type_form: TypeForm,
         type_path: TypePath,
         type_path_item: TypePathItem,
     ) -> str:
@@ -152,7 +152,7 @@ def _type_form_repr(type_form) -> str:
     return type_form.__qualname__
 
 
-def _generic_type_repr(origin: type, args: tuple[type, ...]) -> str:
+def _generic_type_repr(origin: TypeForm, args: tuple[TypeForm, ...]) -> str:
     if len(args) == 0:
         args_str = "()"
     else:

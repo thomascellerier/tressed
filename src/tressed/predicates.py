@@ -23,7 +23,8 @@ import sys
 TYPE_CHECKING = False
 if TYPE_CHECKING:
     from collections.abc import Callable
-    from typing import Any
+
+    from tressed.type_form import TypeForm
 
 __all__ = [
     "get_origin",
@@ -50,9 +51,6 @@ __all__ = [
 ]
 
 if TYPE_CHECKING:
-    # TODO: Use actual typing.TypeForm once it has made its way into python.
-    # Experimental support is coming in mypy 1.19, the PEP (747) is not accepted yet as of the time of writing.
-    type TypeForm = Any
     type TypePredicate[T: TypeForm] = Callable[[T], bool]
 
     __all__ += [
