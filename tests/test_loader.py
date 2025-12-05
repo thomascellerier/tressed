@@ -7,9 +7,9 @@ from pytest_benchmark.fixture import BenchmarkFixture
 from pytest_mock import MockerFixture
 
 from tressed.exceptions import (
-    TressedExceptionGroup,
     TressedTypeError,
     TressedValueError,
+    TressedValueErrorGroup,
 )
 from tressed.loader import Loader
 
@@ -497,7 +497,7 @@ def test_load_literal() -> None:
         loader.load(5, Foo)
     assert (
         str(exc_info.value)
-        == "Failed to load value 5 of type int into Literal at path ., value should be one of: 1, 2, 3, 'foo'"
+        == "Failed to load value 5 of type int into Literal[1, 2, 3, 'foo'] at path ., value should be one of: 1, 2, 3, 'foo'"
     )
 
 
@@ -589,15 +589,13 @@ def test_load_union() -> None:
     assert loader.load(1, int | str) == 1
     assert loader.load("foo", int | str) == "foo"
 
-    with pytest.raises(TressedValueError) as exc_info:
+    with pytest.raises(TressedValueErrorGroup) as exc_info:
         loader.load([1, 2], int | str)
     assert (
         str(exc_info.value)
-        == "Failed to load value [1, 2] at path () into type form int | str"
+        == "Failed to load value of type list at path . into union type int | str (2 sub-exceptions)"
     )
-    cause = exc_info.value.__cause__
-    assert isinstance(cause, ExceptionGroup)
-    assert [str(e) for e in cause.exceptions] == [
+    assert [str(e) for e in exc_info.value.exceptions] == [
         "Cannot load value [1, 2] at path . into int",
         "Cannot load value [1, 2] at path . into str",
     ]
@@ -611,15 +609,13 @@ def test_load_legacy_union() -> None:
     assert loader.load(1, Union[int, str]) == 1
     assert loader.load("foo", Union[int, str]) == "foo"
 
-    with pytest.raises(TressedValueError) as exc_info:
+    with pytest.raises(TressedValueErrorGroup) as exc_info:
         loader.load([1, 2], Union[int, str])
     assert (
         str(exc_info.value)
-        == "Failed to load value [1, 2] at path () into type form int | str"
+        == "Failed to load value of type list at path . into union type int | str (2 sub-exceptions)"
     )
-    cause = exc_info.value.__cause__
-    assert isinstance(cause, TressedExceptionGroup)
-    assert [str(e) for e in cause.exceptions] == [
+    assert [str(e) for e in exc_info.value.exceptions] == [
         "Cannot load value [1, 2] at path . into int",
         "Cannot load value [1, 2] at path . into str",
     ]

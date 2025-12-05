@@ -2,7 +2,7 @@ __all__ = [
     "TressedError",
     "TressedTypeError",
     "TressedValueError",
-    "TressedExceptionGroup",
+    "TressedValueErrorGroup",
 ]
 
 
@@ -18,5 +18,5 @@ class TressedValueError(TressedError, ValueError):
     pass
 
 
-class TressedExceptionGroup(ExceptionGroup, TressedError):
+class TressedValueErrorGroup(ExceptionGroup[TressedValueError], TressedValueError):
     pass

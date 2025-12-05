@@ -1,6 +1,7 @@
 import sys
 
-from tressed.exceptions import TressedExceptionGroup, TressedValueError
+from tressed.exceptions import TressedValueError, TressedValueErrorGroup
+from tressed.predicates import get_args, get_origin, is_union_type
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
@@ -57,8 +58,7 @@ def _type_path_repr(type_path: TypePath) -> str:
 def _type_form_repr(type_form: TypeForm) -> str:
     if name := getattr(type_form, "__name__", None):
         if type_params := getattr(type_form, "__type_params__", None):
-            from tressed.predicates import get_args
-
+            # C[T1=V1, .., Tn=?]
             params = []
 
             if args := get_args(type_form):
@@ -72,6 +72,13 @@ def _type_form_repr(type_form: TypeForm) -> str:
             for type_param in type_params[num_args:]:
                 params.append(f"{_type_form_repr(type_param)}=?")
             return f"{name}[{', '.join(params)}]"
+
+        if args := get_args(type_form):
+            if len(args) > 1 and is_union_type(type_form):
+                # T1 | .. | Tn
+                return " | ".join(map(_type_form_repr, args))
+            # C[T1, .., Tn]
+            return f"{name}[{', '.join(map(_type_form_repr, args))}]"
         return name
     return repr(type_form)
 
@@ -138,8 +145,6 @@ def load_complex[T](
 def load_dict[T](
     value: Any, type_form: TypeForm[T], type_path: TypePath, loader: LoaderProtocol
 ) -> T:
-    from tressed.predicates import get_args
-
     args = get_args(type_form)
 
     assert args is not None
@@ -157,8 +162,6 @@ def load_dict[T](
 def load_simple_collection[T](
     value: Any, type_form: TypeForm[T], type_path: TypePath, loader: LoaderProtocol
 ) -> T:
-    from tressed.predicates import get_args, get_origin
-
     origin = get_origin(type_form)
     num_expected_args = 2 if origin is tuple else 1
     args = get_args(type_form)
@@ -178,8 +181,6 @@ def load_simple_collection[T](
 def load_tuple[T](
     value: Any, type_form: TypeForm[T], type_path: TypePath, loader: LoaderProtocol
 ) -> T:
-    from tressed.predicates import get_args, get_origin
-
     origin = get_origin(type_form)
     args = get_args(type_form)
     if origin is None or args is None:
@@ -292,8 +293,6 @@ def load_namedtuple[T](
 def load_literal[T](
     value: Any, type_form: TypeForm[T], type_path: TypePath, loader: LoaderProtocol
 ) -> T:
-    from tressed.predicates import get_args
-
     args = get_args(type_form)
     assert args is not None
     if value in args:
@@ -310,8 +309,6 @@ def load_type_alias[T](
 ) -> T:
     evaluated_type = type_form.evaluate_value()  # type: ignore[attr-defined]
     if (num_params := len(type_form.__type_params__)) > 0:
-        from tressed.predicates import get_args
-
         args = get_args(type_form)
         if args is None or len(args) < num_params:
             raise TressedValueError(
@@ -330,8 +327,6 @@ def load_optional[T](
     if value is None:
         return value  # type: ignore[return-value]
 
-    from tressed.predicates import get_args
-
     args = get_args(type_form)
     match args:
         case [T, NoneType] if NoneType is type(None):
@@ -347,8 +342,6 @@ def load_optional[T](
 def load_union[T](
     value: Any, type_form: TypeForm[T], type_path: TypePath, loader: LoaderProtocol
 ) -> T:
-    from tressed.predicates import get_args
-
     args = get_args(type_form)
     assert args, "unreachable"
 
@@ -362,8 +355,9 @@ def load_union[T](
             errors.append(error)
 
     assert args, "unreachable"
-    raise TressedExceptionGroup(
-        f"Failed to load value of type {_type_form_repr(type(value))} into {_type_form_repr(type_form)} "
-        f"at path {_type_path_repr(type_path)}",
+    raise TressedValueErrorGroup(
+        f"Failed to load value of type {_type_form_repr(type(value))} "
+        f"at path {_type_path_repr(type_path)} "
+        f"into union type {_type_form_repr(type_form)}",
         errors,
     )
