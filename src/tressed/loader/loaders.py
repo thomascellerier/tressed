@@ -1,7 +1,9 @@
 import sys
 
 from tressed.exceptions import TressedValueError, TressedValueErrorGroup
-from tressed.predicates import get_args, get_origin, is_union_type
+from tressed.predicates import get_args, get_origin
+from tressed.type_form import type_form_repr
+from tressed.type_path import type_path_repr
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
@@ -13,7 +15,9 @@ if TYPE_CHECKING:
     from tressed.loader.types import LoaderProtocol, TypePath
 
 # TODO:
-# - Tagged union using Annotated
+# Tagged union using Annotated:
+#
+# Annotated[T1 | ... | Tn, Discriminator(...)]
 
 __all__ = [
     "load_identity",
@@ -46,38 +50,6 @@ else:
     _MISSING = object()
 
 
-def _type_path_repr(type_path: TypePath) -> str:
-    return f".{'.'.join(map(str, type_path))}"
-
-
-def _type_form_repr(type_form: TypeForm) -> str:
-    if name := getattr(type_form, "__name__", None):
-        if type_params := getattr(type_form, "__type_params__", None):
-            # C[T1=V1, .., Tn=?]
-            params = []
-
-            if args := get_args(type_form):
-                num_args = len(args)
-                for i, arg in enumerate(args):
-                    params.append(
-                        f"{_type_form_repr(type_params[i])}={_type_form_repr(arg)}"
-                    )
-            else:
-                num_args = 0
-            for type_param in type_params[num_args:]:
-                params.append(f"{_type_form_repr(type_param)}=?")
-            return f"{name}[{', '.join(params)}]"
-
-        if args := get_args(type_form):
-            if len(args) > 1 and is_union_type(type_form):
-                # T1 | .. | Tn
-                return " | ".join(map(_type_form_repr, args))
-            # C[T1, .., Tn]
-            return f"{name}[{', '.join(map(_type_form_repr, args))}]"
-        return name
-    return repr(type_form)
-
-
 def _items(value: Any) -> Iterator[tuple[Any, Any]]:
     type_ = type(value)
     if type_ is dict:
@@ -97,7 +69,7 @@ def load_identity[T](
     if type(value) is type_form:
         return value
     raise TressedValueError(
-        f"Cannot load value {value!r} at path {_type_path_repr(type_path)} into {_type_form_repr(type_form)}"
+        f"Cannot load value {value!r} at path {type_path_repr(type_path)} into {type_form_repr(type_form)}"
     )
 
 
@@ -122,7 +94,7 @@ def load_float[T](
     if type_ is int:
         return type_form(value)  # type: ignore[call-arg]
     raise TressedValueError(
-        f"Cannot load value {value!r} at path {_type_path_repr(type_path)} into {_type_form_repr(type_form)}"
+        f"Cannot load value {value!r} at path {type_path_repr(type_path)} into {type_form_repr(type_form)}"
     )
 
 
@@ -162,8 +134,8 @@ def load_simple_collection[T](
     args = get_args(type_form)
     if origin is None or args is None or len(args) != num_expected_args:
         raise TressedValueError(
-            f"Cannot load value {value!r} at path {_type_path_repr(type_path)}, "
-            f"{_type_form_repr(type_form)} is not a homogeneous generic type"
+            f"Cannot load value {value!r} at path {type_path_repr(type_path)}, "
+            f"{type_form_repr(type_form)} is not a homogeneous generic type"
         )
 
     item_type = args[0]
@@ -180,7 +152,7 @@ def load_tuple[T](
     args = get_args(type_form)
     if origin is None or args is None:
         raise TressedValueError(
-            f"Cannot load value {value!r} at path {_type_path_repr(type_path)}, "
+            f"Cannot load value {value!r} at path {type_path_repr(type_path)}, "
             f"{getattr(type_form, '__name__', type_form)} is not a generic type"
         )
 
@@ -257,15 +229,15 @@ def load_typeddict[T](
 
     if missing_keys := (required_keys - values.keys()):
         raise TressedValueError(
-            f"Failed to load value of type {_type_form_repr(type(value))} into {_type_form_repr(type_form)} "
-            f"at path {_type_path_repr(type_path)}, "
+            f"Failed to load value of type {type_form_repr(type(value))} into {type_form_repr(type_form)} "
+            f"at path {type_path_repr(type_path)}, "
             f"missing required keys {', '.join(map(repr, missing_keys))}: {value}"
         )
 
     if extra_keys:
         raise TressedValueError(
-            f"Failed to load value of type {_type_form_repr(type(value))} into {_type_form_repr(type_form)} "
-            f"at path {_type_path_repr(type_path)}, "
+            f"Failed to load value of type {type_form_repr(type(value))} into {type_form_repr(type_form)} "
+            f"at path {type_path_repr(type_path)}, "
             f"extra keys {', '.join(sorted(map(repr, extra_keys)))}: {value}"
         )
 
@@ -293,8 +265,8 @@ def load_literal[T](
     if value in args:
         return value
     raise TressedValueError(
-        f"Failed to load value {value!r} of type {_type_form_repr(type(value))} into {_type_form_repr(type_form)} "
-        f"at path {_type_path_repr(type_path)}, value should be one of: "
+        f"Failed to load value {value!r} of type {type_form_repr(type(value))} into {type_form_repr(type_form)} "
+        f"at path {type_path_repr(type_path)}, value should be one of: "
         f"{', '.join(map(repr, args))}"
     )
 
@@ -307,8 +279,8 @@ def load_type_alias[T](
         args = get_args(type_form)
         if args is None or len(args) < num_params:
             raise TressedValueError(
-                f"Failed to load value of type {_type_form_repr(type(value))} into {_type_form_repr(type_form)} "
-                f"at path {_type_path_repr(type_path)}, type form should have only concrete type parameters"
+                f"Failed to load value of type {type_form_repr(type(value))} into {type_form_repr(type_form)} "
+                f"at path {type_path_repr(type_path)}, type form should have only concrete type parameters"
             )
 
         evaluated_type = evaluated_type[*args]
@@ -351,9 +323,9 @@ def load_union[T](
 
     assert args, "unreachable"
     raise TressedValueErrorGroup(
-        f"Failed to load value of type {_type_form_repr(type(value))} "
-        f"at path {_type_path_repr(type_path)} "
-        f"into union type {_type_form_repr(type_form)}",
+        f"Failed to load value of type {type_form_repr(type(value))} "
+        f"at path {type_path_repr(type_path)} "
+        f"into union type {type_form_repr(type_form)}",
         errors,
     )
 

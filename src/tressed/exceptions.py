@@ -1,3 +1,7 @@
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    pass
+
 __all__ = [
     "TressedError",
     "TressedTypeError",

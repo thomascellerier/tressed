@@ -1,0 +1,38 @@
+__all__ = [
+    "type_form_repr",
+]
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from typing_extensions import TypeForm
+
+    __all__ += ["TypeForm"]
+
+
+def type_form_repr(type_form: TypeForm) -> str:
+    from tressed.predicates import get_args, is_union_type
+
+    if name := getattr(type_form, "__name__", None):
+        if type_params := getattr(type_form, "__type_params__", None):
+            # C[T1=V1, .., Tn=?]
+            params = []
+
+            if args := get_args(type_form):
+                num_args = len(args)
+                for i, arg in enumerate(args):
+                    params.append(
+                        f"{type_form_repr(type_params[i])}={type_form_repr(arg)}"
+                    )
+            else:
+                num_args = 0
+            for type_param in type_params[num_args:]:
+                params.append(f"{type_form_repr(type_param)}=?")
+            return f"{name}[{', '.join(params)}]"
+
+        if args := get_args(type_form):
+            if len(args) > 1 and is_union_type(type_form):
+                # T1 | .. | Tn
+                return " | ".join(map(type_form_repr, args))
+            # C[T1, .., Tn]
+            return f"{name}[{', '.join(map(type_form_repr, args))}]"
+        return name
+    return repr(type_form)
