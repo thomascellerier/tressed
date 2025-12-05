@@ -631,3 +631,24 @@ def test_load_path() -> None:
     assert loader.load("/foo/bar/baz", PureWindowsPath) == PureWindowsPath(
         "/foo/bar/baz"
     )
+
+
+def test_load_datetime() -> None:
+    from datetime import UTC, date, datetime, time, timedelta, timezone
+
+    loader = Loader()
+    assert loader.load("12:45:59", time) == time(12, 45, 59)
+    assert loader.load("12:45:59Z", time) == time(12, 45, 59, tzinfo=UTC)
+    assert loader.load("12:45:59-00:30", time) == time(
+        12, 45, 59, tzinfo=timezone(timedelta(seconds=-1800))
+    )
+    assert loader.load("2025-12-29", date) == date(2025, 12, 29)
+    assert loader.load("2025-12-29T12:45:59", datetime) == datetime(
+        2025, 12, 29, 12, 45, 59
+    )
+    assert loader.load("2025-12-29T12:45:59Z", datetime) == datetime(
+        2025, 12, 29, 12, 45, 59, tzinfo=UTC
+    )
+    assert loader.load("2025-12-29T12:45:59+02:00", datetime) == datetime(
+        2025, 12, 29, 12, 45, 59, tzinfo=timezone(timedelta(seconds=7200))
+    )

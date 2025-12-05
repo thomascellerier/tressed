@@ -13,9 +13,6 @@ if TYPE_CHECKING:
     from tressed.loader.types import LoaderProtocol, TypePath
 
 # TODO:
-# - datatime.datetime
-# - datetime.date
-# - datetime.time
 # - Tagged union using Annotated
 
 __all__ = [
@@ -34,6 +31,7 @@ __all__ = [
     "load_type_alias",
     "load_optional",
     "load_union",
+    "load_datetime",
 ]
 
 if TYPE_CHECKING:
@@ -358,3 +356,9 @@ def load_union[T](
         f"into union type {_type_form_repr(type_form)}",
         errors,
     )
+
+
+def load_datetime[T](
+    value: Any, type_form: TypeForm[T], type_path: TypePath, loader: LoaderProtocol
+) -> T:
+    return type_form.fromisoformat(value)  # type: ignore[attr-defined]

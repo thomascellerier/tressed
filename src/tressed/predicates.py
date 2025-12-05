@@ -45,6 +45,7 @@ __all__ = [
     "is_optional_type",
     "is_union_type",
     "is_fspath_type",
+    "is_datetime_type",
 ]
 
 if TYPE_CHECKING:
@@ -266,3 +267,9 @@ def is_union_type(type_form: TypeForm) -> bool:
 
 def is_fspath_type(type_form: TypeForm) -> bool:
     return hasattr(type_form, "__fspath__")
+
+
+def is_datetime_type(type_form: TypeForm) -> bool:
+    if datetime := sys.modules.get("datetime"):
+        return type_form in frozenset({datetime.datetime, datetime.date, datetime.time})
+    return False

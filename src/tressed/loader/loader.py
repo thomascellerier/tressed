@@ -37,6 +37,7 @@ def _default_type_loaders():
 def _default_type_mappers(specialize: bool) -> Mapping[TypePredicate, TypeLoaderFn]:
     from tressed.loader.loaders import (
         load_dataclass,
+        load_datetime,
         load_dict,
         load_literal,
         load_namedtuple,
@@ -51,6 +52,7 @@ def _default_type_mappers(specialize: bool) -> Mapping[TypePredicate, TypeLoader
     )
     from tressed.predicates import (
         is_dataclass_type,
+        is_datetime_type,
         is_dict_type,
         is_enum_type,
         is_frozenset_type,
@@ -106,6 +108,7 @@ def _default_type_mappers(specialize: bool) -> Mapping[TypePredicate, TypeLoader
         is_enum_type: load_simple_scalar,
         is_uuid_type: load_simple_scalar,
         is_fspath_type: load_simple_scalar,
+        is_datetime_type: load_datetime,
     }
 
 
