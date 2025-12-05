@@ -619,3 +619,15 @@ def test_load_legacy_union() -> None:
         "Cannot load value [1, 2] at path . into int",
         "Cannot load value [1, 2] at path . into str",
     ]
+
+
+def test_load_path() -> None:
+    from pathlib import Path, PurePosixPath, PureWindowsPath
+
+    loader = Loader()
+
+    assert loader.load("/foo/bar/baz", Path) == Path("/foo/bar/baz")
+    assert loader.load("/foo/bar/baz", PurePosixPath) == PurePosixPath("/foo/bar/baz")
+    assert loader.load("/foo/bar/baz", PureWindowsPath) == PureWindowsPath(
+        "/foo/bar/baz"
+    )

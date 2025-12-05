@@ -54,6 +54,7 @@ def _default_type_mappers(specialize: bool) -> Mapping[TypePredicate, TypeLoader
         is_dict_type,
         is_enum_type,
         is_frozenset_type,
+        is_fspath_type,
         is_homogeneous_tuple_type,
         is_ipaddress_type,
         is_list_type,
@@ -104,6 +105,7 @@ def _default_type_mappers(specialize: bool) -> Mapping[TypePredicate, TypeLoader
         is_namedtuple_type: load_namedtuple,
         is_enum_type: load_simple_scalar,
         is_uuid_type: load_simple_scalar,
+        is_fspath_type: load_simple_scalar,
     }
 
 

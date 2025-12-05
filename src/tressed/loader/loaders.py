@@ -13,9 +13,6 @@ if TYPE_CHECKING:
     from tressed.loader.types import LoaderProtocol, TypePath
 
 # TODO:
-# - typing.Optional[T]
-# - T1 | .. | T2, typing.Union[T]
-# - pathlib.Path
 # - datatime.datetime
 # - datetime.date
 # - datetime.time

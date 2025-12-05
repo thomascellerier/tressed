@@ -44,6 +44,7 @@ __all__ = [
     "is_type_alias_type",
     "is_optional_type",
     "is_union_type",
+    "is_fspath_type",
 ]
 
 if TYPE_CHECKING:
@@ -261,3 +262,7 @@ def is_union_type(type_form: TypeForm) -> bool:
     if typing := sys.modules.get("typing"):
         return origin is typing.Union
     return False
+
+
+def is_fspath_type(type_form: TypeForm) -> bool:
+    return hasattr(type_form, "__fspath__")

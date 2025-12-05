@@ -78,6 +78,7 @@ The following type forms are supported out of the box:
 - `typing.NewType[T]`
 - `ipaddress.{IPv4Address, IPv6Address, IPv4Interface, IPv6Interface, IPv4Network, IPv6Network}`
 - `uuid.UUID`
+- `pathlib.Path`
 
 It is easy to add support for custom types as needed when creating a loader.
 
