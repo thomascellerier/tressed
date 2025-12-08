@@ -2,8 +2,6 @@
 # TODO: Switch to TypeForm https://peps.python.org/pep-0747/ once available
 from __future__ import annotations
 
-from typing_extensions import TypeForm
-
 from tressed.exceptions import TressedTypeError, TressedValueError
 
 TYPE_CHECKING = False
@@ -14,6 +12,7 @@ if TYPE_CHECKING:
     from tressed.alias import Alias, AliasFn, AliasResolver
     from tressed.loader.types import TypeLoaderFn, TypePath
     from tressed.predicates import TypePredicate
+    from tressed.type_form import TypeForm
 
 
 __all__ = [
@@ -21,7 +20,7 @@ __all__ = [
 ]
 
 
-def _default_type_loaders():
+def _default_type_loaders() -> Mapping[TypeForm, TypeLoaderFn]:
     from tressed.loader.loaders import load_complex, load_float, load_identity
 
     return {
@@ -57,17 +56,17 @@ def _default_type_mappers(specialize: bool) -> Mapping[TypePredicate, TypeLoader
         is_dict_type,
         is_discriminated_union,
         is_enum_type,
-        is_frozenset_type,
         is_fspath_type,
-        is_homogeneous_tuple_type,
+        is_generic_frozenset_type,
+        is_generic_homogeneous_tuple_type,
+        is_generic_list_type,
+        is_generic_set_type,
+        is_generic_tuple_type,
         is_ipaddress_type,
-        is_list_type,
         is_literal_type,
         is_namedtuple_type,
         is_newtype,
         is_optional_type,
-        is_set_type,
-        is_tuple_type,
         is_type_alias_type,
         is_typeddict,
         is_union_type,
@@ -91,11 +90,11 @@ def _default_type_mappers(specialize: bool) -> Mapping[TypePredicate, TypeLoader
     # Note that the order matters as some predicates match several types,
     # put the most specific match first.
     return {
-        is_homogeneous_tuple_type: load_simple_collection_,
-        is_tuple_type: load_tuple_,
-        is_list_type: load_simple_collection_,
-        is_set_type: load_simple_collection_,
-        is_frozenset_type: load_simple_collection_,
+        is_generic_homogeneous_tuple_type: load_simple_collection_,
+        is_generic_tuple_type: load_tuple_,
+        is_generic_list_type: load_simple_collection_,
+        is_generic_set_type: load_simple_collection_,
+        is_generic_frozenset_type: load_simple_collection_,
         is_dict_type: load_dict,
         is_literal_type: load_literal,
         is_type_alias_type: load_type_alias,
@@ -131,7 +130,9 @@ class Loader:
     ) -> None:
         # Map a type to its loader
         if type_loaders is None:
-            self._type_loaders: dict[TypeForm, TypeLoaderFn] = _default_type_loaders()
+            self._type_loaders: dict[TypeForm, TypeLoaderFn] = dict(
+                _default_type_loaders()
+            )
         else:
             self._type_loaders = dict(type_loaders)
 

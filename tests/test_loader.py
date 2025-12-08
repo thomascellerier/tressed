@@ -120,8 +120,23 @@ def test_load_ipaddress() -> None:
     import ipaddress
 
     loader = Loader()
-    loaded = loader.load("127.0.0.1", ipaddress.IPv4Address)
-    assert_type(loaded, ipaddress.IPv4Address)
+    loaded_v4a = loader.load("127.0.0.1", ipaddress.IPv4Address)
+    assert_type(loaded_v4a, ipaddress.IPv4Address)
+
+    loaded_v6a = loader.load("::1", ipaddress.IPv6Address)
+    assert_type(loaded_v6a, ipaddress.IPv6Address)
+
+    loaded_v4n = loader.load("127.0.0.0/24", ipaddress.IPv4Network)
+    assert_type(loaded_v4n, ipaddress.IPv4Network)
+
+    loaded_v6n = loader.load("::0/64", ipaddress.IPv6Network)
+    assert_type(loaded_v6n, ipaddress.IPv6Network)
+
+    loaded_v4i = loader.load("127.0.0.1/24", ipaddress.IPv4Interface)
+    assert_type(loaded_v4i, ipaddress.IPv4Interface)
+
+    loaded_v6i = loader.load("::1/64", ipaddress.IPv6Interface)
+    assert_type(loaded_v6i, ipaddress.IPv6Interface)
 
 
 def test_load_tuple_benchmark(benchmark: BenchmarkFixture) -> None:

@@ -29,11 +29,11 @@ if TYPE_CHECKING:
 __all__ = [
     "get_origin",
     "get_args",
-    "is_tuple_type",
-    "is_homogeneous_tuple_type",
-    "is_list_type",
-    "is_set_type",
-    "is_frozenset_type",
+    "is_generic_tuple_type",
+    "is_generic_homogeneous_tuple_type",
+    "is_generic_list_type",
+    "is_generic_set_type",
+    "is_generic_frozenset_type",
     "is_dataclass_type",
     "is_newtype",
     "is_typeddict",
@@ -71,7 +71,7 @@ def get_args(type_form: TypeForm) -> tuple[TypeForm, ...] | None:
     return getattr(type_form, "__args__", None)
 
 
-def is_homogeneous_tuple_type(type_form: TypeForm) -> bool:
+def is_generic_homogeneous_tuple_type(type_form: TypeForm) -> bool:
     """
     The given type form matches tuple[T, ...] or typing.Tuple[T, ...]
     """
@@ -88,7 +88,7 @@ def is_homogeneous_tuple_type(type_form: TypeForm) -> bool:
     return False
 
 
-def is_tuple_type(type_form: TypeForm) -> bool:
+def is_generic_tuple_type(type_form: TypeForm) -> bool:
     origin = get_origin(type_form)
     if origin is None:
         return False
@@ -99,7 +99,7 @@ def is_tuple_type(type_form: TypeForm) -> bool:
     return False
 
 
-def is_list_type(type_form: TypeForm) -> bool:
+def is_generic_list_type(type_form: TypeForm) -> bool:
     origin = get_origin(type_form)
     if origin is None:
         return False
@@ -110,7 +110,7 @@ def is_list_type(type_form: TypeForm) -> bool:
     return False
 
 
-def is_set_type(type_form: TypeForm) -> bool:
+def is_generic_set_type(type_form: TypeForm) -> bool:
     origin = get_origin(type_form)
     if origin is None:
         return False
@@ -121,7 +121,7 @@ def is_set_type(type_form: TypeForm) -> bool:
     return False
 
 
-def is_frozenset_type(type_form: TypeForm) -> bool:
+def is_generic_frozenset_type(type_form: TypeForm) -> bool:
     origin = get_origin(type_form)
     if origin is None:
         return False
