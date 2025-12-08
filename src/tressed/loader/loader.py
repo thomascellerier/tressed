@@ -128,7 +128,7 @@ class Loader:
         # or changing the alias resolution behavior entirely.
         alias_resolver_factory: Callable[[AliasFn | None], AliasResolver] | None = None,
     ) -> None:
-        # Map a type to its loader
+        # Map a type form to its loader
         if type_loaders is None:
             self._type_loaders: dict[TypeForm, TypeLoaderFn] = dict(
                 _default_type_loaders()

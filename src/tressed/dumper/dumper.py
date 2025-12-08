@@ -67,13 +67,13 @@ class Dumper:
         # or changing the alias resolution behavior entirely.
         alias_resolver_factory: Callable[[AliasFn | None], AliasResolver] | None = None,
     ) -> None:
-        # Map a type to its loader
+        # Map a type to its dumper
         if type_dumpers is None:
             self._type_dumpers: dict[type, TypeDumperFn] = dict(_default_type_dumpers())
         else:
             self._type_dumpers = dict(type_dumpers)
 
-        # Mapping of type predicate to a loader
+        # Mapping of type predicate to a dumper
         if type_mappers is None:
             self._type_mappers: Mapping[TypePredicate, TypeDumperFn] = (
                 _default_type_mappers(enable_specialization)
