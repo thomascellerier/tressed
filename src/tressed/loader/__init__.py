@@ -5,10 +5,12 @@ if TYPE_CHECKING:
 __all__ = ["Loader"]
 
 
-def __getattr__(name: str) -> type[Loader]:
-    if name == "Loader":
-        from tressed.loader.loader import Loader
+if not TYPE_CHECKING:
 
-        return Loader
+    def __getattr__(name: str) -> type[Loader]:
+        if name == "Loader":
+            from tressed.loader.loader import Loader
 
-    raise AttributeError(f"Package 'tressed.loader' has no attribute '{name}'")
+            return Loader
+
+        raise AttributeError(f"Package '{__package__}' has no attribute '{name}'")

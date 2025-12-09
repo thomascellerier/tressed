@@ -5,10 +5,12 @@ if TYPE_CHECKING:
 __all__ = ["Dumper"]
 
 
-def __getattr__(name: str) -> type[Dumper]:
-    if name == "Dumper":
-        from tressed.dumper.dumper import Dumper
+if not TYPE_CHECKING:
 
-        return Dumper
+    def __getattr__(name: str) -> type[Dumper]:
+        if name == "Dumper":
+            from tressed.dumper.dumper import Dumper
 
-    raise AttributeError(f"Package 'tressed.dumper' has no attribute '{name}'")
+            return Dumper
+
+        raise AttributeError(f"Package '{__package__}' has no attribute '{name}'")

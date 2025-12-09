@@ -25,7 +25,7 @@ Now, let's get started:
 >>> from dataclasses import dataclass, field
 >>> from pprint import pprint
 >>> 
->>> from tressed.loader import Loader
+>>> from tressed import Loader
 >>> from tressed.alias import to_camel
 >>> 
 >>> @dataclass
@@ -48,7 +48,7 @@ SomeDataclass(some_field='foo',
               some_default_factory_field=[1, 2, 3],
               other_field=(2, 'humbug'))
 >>>
->>> from tressed.dumper import Dumper
+>>> from tressed import Dumper
 >>> from tressed.alias import to_pascal
 >>>
 >>> dumper = Dumper(alias_fn=to_pascal)
