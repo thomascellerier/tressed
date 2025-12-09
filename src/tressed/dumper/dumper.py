@@ -37,10 +37,14 @@ def _default_type_dumpers() -> Mapping[type, TypeDumperFn]:
 
 def _default_type_mappers(specialize: bool) -> Mapping[TypePredicate, TypeDumperFn]:
     from tressed.dumper.dumpers import (
+        dump_dataclass,
+        dump_datetime,
         dump_enum,
         dump_simple_scalar,
     )
     from tressed.predicates import (
+        is_dataclass_type,
+        is_datetime_type,
         is_enum_type,
         is_ipaddress_type,
         is_uuid_type,
@@ -50,12 +54,16 @@ def _default_type_mappers(specialize: bool) -> Mapping[TypePredicate, TypeDumper
         is_ipaddress_type: dump_simple_scalar,
         is_uuid_type: dump_simple_scalar,
         is_enum_type: dump_enum,
+        is_datetime_type: dump_datetime,
+        is_dataclass_type: dump_dataclass,
     }
 
 
 class Dumper:
     def __init__(
         self,
+        *,
+        hide_defaults: bool = False,
         type_dumpers: Mapping[type, TypeDumperFn] | None = None,
         type_mappers: Mapping[TypePredicate, TypeDumperFn] | None = None,
         enable_specialization: bool = False,
@@ -98,6 +106,7 @@ class Dumper:
             self._alias_resolver = AliasResolver(alias_fn)
         else:
             self._alias_resolver = alias_resolver_factory(alias_fn)
+        self.hide_defaults = hide_defaults
 
     def _resolve_alias(
         self, type_form: TypeForm, type_path: TypePath, name: str

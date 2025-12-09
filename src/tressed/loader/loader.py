@@ -117,6 +117,7 @@ def _default_type_mappers(specialize: bool) -> Mapping[TypePredicate, TypeLoader
 class Loader:
     def __init__(
         self,
+        *,
         type_loaders: Mapping[TypeForm, TypeLoaderFn] | None = None,
         type_mappers: Mapping[TypePredicate, TypeLoaderFn] | None = None,
         enable_specialization: bool = False,

@@ -1,3 +1,5 @@
+import sys
+
 TYPE_CHECKING = False
 if TYPE_CHECKING:
     from typing import Any
@@ -12,6 +14,8 @@ __all__ = [
     "dump_simple_mapping",
     "dump_simple_scalar",
     "dump_enum",
+    "dump_datetime",
+    "dump_dataclass",
 ]
 
 
@@ -52,3 +56,63 @@ def dump_simple_mapping(
 
 def dump_enum(value: Any, type_path: TypePath, dumper: DumperProtocol) -> Dumped:
     return dumper._dump(value.value, type_path)
+
+
+def dump_datetime(value: Any, type_path: TypePath, dumper: DumperProtocol) -> Dumped:
+    dumped = value.isoformat()
+    # Return datetime.{date,datetime,time}.isoformat() with the one difference that we use
+    # a Z suffix instead of +00:00 to keep the output more compact and more like the usual datetimes
+    # seen in json payloads.
+    zero_suffix = "+00:00"
+    if dumped.endswith(zero_suffix):
+        return dumped[: -len(zero_suffix)] + "Z"
+    return dumped
+
+
+_BASIC_DEFAULT_FACTORIES: dict[Any, Any] = {
+    list: [],
+    set: set(),
+    dict: {},
+}
+
+
+def dump_dataclass(value: Any, type_path: TypePath, dumper: DumperProtocol) -> Dumped:
+    from dataclasses import MISSING, fields
+
+    dumped = {}
+    for field in fields(value):
+        if not field.repr or not field.init:
+            continue
+
+        name = field.name
+
+        field_value = getattr(value, name)
+
+        if dumper.hide_defaults:
+            if (default_value := field.default) is not MISSING:
+                if field_value == default_value:
+                    continue
+
+            elif (default_factory := field.default_factory) is not MISSING:
+                # Avoid calling the default factory function if its a known mutable type like list
+                if default_factory in frozenset({list, set, dict}) and len(value) == 0:
+                    continue
+
+                # Avoid calling default factory if we know the value can't match the default
+                cant_be_default = (
+                    uuid := sys.modules.get("uuid")
+                ) and default_factory in frozenset(
+                    {
+                        uuid.uuid1,
+                        uuid.uuid4,
+                        uuid.uuid6,
+                        uuid.uuid7,
+                    }
+                )
+                if not cant_be_default and field_value == default_factory():
+                    continue
+
+        alias = dumper._resolve_alias(type(value), type_path, name)
+        dumped[alias] = dumper._dump(field_value, (*type_path, alias))
+
+    return dumped

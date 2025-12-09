@@ -29,4 +29,7 @@ if TYPE_CHECKING:
             self, value_type: type, type_path: TypePath, name: str
         ) -> str: ...
 
+        @property
+        def hide_defaults(self) -> bool: ...
+
     type TypeDumperFn = Callable[[Any, TypePath, DumperProtocol], Dumped]
