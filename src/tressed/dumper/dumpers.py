@@ -69,13 +69,6 @@ def dump_datetime(value: Any, type_path: TypePath, dumper: DumperProtocol) -> Du
     return dumped
 
 
-_BASIC_DEFAULT_FACTORIES: dict[Any, Any] = {
-    list: [],
-    set: set(),
-    dict: {},
-}
-
-
 def dump_dataclass(value: Any, type_path: TypePath, dumper: DumperProtocol) -> Dumped:
     from dataclasses import MISSING, fields
 
