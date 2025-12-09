@@ -16,6 +16,7 @@ __all__ = ["Dumper"]
 
 def _default_type_dumpers() -> Mapping[type, TypeDumperFn]:
     from tressed.dumper.dumpers import (
+        dump_complex,
         dump_identity,
         dump_simple_mapping,
         dump_simple_sequence,
@@ -32,6 +33,7 @@ def _default_type_dumpers() -> Mapping[type, TypeDumperFn]:
         set: dump_simple_sequence,
         frozenset: dump_simple_sequence,
         dict: dump_simple_mapping,
+        complex: dump_complex,
     }
 
 

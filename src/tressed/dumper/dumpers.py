@@ -13,6 +13,7 @@ __all__ = [
     "dump_simple_sequence",
     "dump_simple_mapping",
     "dump_simple_scalar",
+    "dump_complex",
     "dump_enum",
     "dump_datetime",
     "dump_dataclass",
@@ -33,6 +34,10 @@ def dump_simple_sequence(
     value: Any, type_path: TypePath, dumper: DumperProtocol
 ) -> Dumped:
     return [dumper._dump(item, (*type_path, i)) for i, item in enumerate(value)]
+
+
+def dump_complex(value: Any, type_path: TypePath, dumper: DumperProtocol) -> Dumped:
+    return [value.real, value.imag]
 
 
 def _dump_key(key: Any, type_path: TypePath, dumper: DumperProtocol) -> str:
