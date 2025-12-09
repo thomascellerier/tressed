@@ -35,17 +35,28 @@ Now, let's get started:
 ...     some_default_factory_field: list[int] = field(default_factory=lambda: [1, 2, 3])
 ...     other_field: tuple[int, str] = field(metadata={"alias": "OTHER"}, kw_only=True)
 ...     
->>> value = {
+>>> raw_value = {
 ...     "someField": "foo",
 ...     "OTHER": (2, "humbug"),
 ... }
 ... 
 >>> loader = Loader(alias_fn=to_camel)
->>> pprint(loader.load(value, SomeDataclass))
+>>> value = loader.load(raw_value, SomeDataclass)
+>>> pprint(value)
 SomeDataclass(some_field='foo',
               some_default_field='bar',
               some_default_factory_field=[1, 2, 3],
               other_field=(2, 'humbug'))
+>>>
+>>> from tressed.dumper import Dumper
+>>> from tressed.alias import to_pascal
+>>>
+>>> dumper = Dumper(alias_fn=to_pascal)
+>>> pprint(dumper.dump(value))
+{'OTHER': [2, 'humbug'],
+ 'SomeDefaultFactoryField': [1, 2, 3],
+ 'SomeDefaultField': 'bar',
+ 'SomeField': 'foo'}
 ```
 
 ## Features
