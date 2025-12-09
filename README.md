@@ -19,8 +19,22 @@ Install tressed using pip:
 $ pip install tressed
 ```
 
-Now, let's get started:
+Now we can get going!
+For simple usecases, you can use the default loader and dumper directly:
+```pycon
+>>> from tressed import load, dump
+>>> from pprint import pprint
+>>>
+>>>
+>>> value = load([1, [2, 2], [3, 4]], tuple[int, set[float], complex])
+>>> pprint(value)
+(1, {2.0}, (3+4j))
+>>>
+>>> pprint(dump(value))
+[1, [2.0], [3.0, 4.0]]
+```
 
+For more advanced use cases instantiate a Loader and/or a Dumper:
 ```pycon
 >>> from dataclasses import dataclass, field
 >>> from pprint import pprint
