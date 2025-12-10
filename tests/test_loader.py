@@ -60,6 +60,19 @@ def test_load_list() -> None:
         loader.load(["foo", "bar"], list[int])
 
 
+def test_load_list_legacy() -> None:
+    from typing import List
+
+    loader = Loader()
+    assert loader.load([1, 2, 3], List[int]) == [1, 2, 3]
+
+    with pytest.raises(TressedTypeFormError):
+        loader.load(["foo", "bar"], List)
+
+    with pytest.raises(TressedValueError):
+        loader.load(["foo", "bar"], List[int])
+
+
 def test_load_set() -> None:
     loader = Loader()
     loaded = loader.load([1, 2, 3, 2], set[int])
@@ -71,6 +84,21 @@ def test_load_set() -> None:
 
     with pytest.raises(TressedValueError):
         loader.load(["foo", "bar"], set[int])
+
+
+def test_load_set_legacy() -> None:
+    from typing import Set
+
+    loader = Loader()
+    loaded = loader.load([1, 2, 3, 2], Set[int])
+    assert type(loaded) is set
+    assert loaded == {1, 2, 3}
+
+    with pytest.raises(TressedTypeFormError):
+        loader.load(["foo", "bar"], Set)
+
+    with pytest.raises(TressedValueError):
+        loader.load(["foo", "bar"], Set[int])
 
 
 def test_load_frozenset() -> None:
@@ -86,6 +114,21 @@ def test_load_frozenset() -> None:
         loader.load(["foo", "bar"], frozenset[int])
 
 
+def test_load_frozenset_legacy() -> None:
+    from typing import FrozenSet
+
+    loader = Loader()
+    loaded = loader.load([1, 2, 3, 2], FrozenSet[int])
+    assert type(loaded) is frozenset
+    assert loaded == frozenset({1, 2, 3})
+
+    with pytest.raises(TressedTypeFormError):
+        loader.load(["foo", "bar"], FrozenSet)
+
+    with pytest.raises(TressedValueError):
+        loader.load(["foo", "bar"], FrozenSet[int])
+
+
 def test_load_homogeneous_tuple() -> None:
     loader = Loader()
     assert loader.load([1, 2, 3], tuple[int, ...]) == (1, 2, 3)
@@ -97,6 +140,19 @@ def test_load_homogeneous_tuple() -> None:
         loader.load(["foo", "bar"], tuple[int, ...])
 
 
+def test_load_homogeneous_tuple_legacy() -> None:
+    from typing import Tuple
+
+    loader = Loader()
+    assert loader.load([1, 2, 3], Tuple[int, ...]) == (1, 2, 3)  # type: ignore[arg-type]
+
+    with pytest.raises(TressedTypeFormError):
+        loader.load(["foo", "bar"], Tuple)
+
+    with pytest.raises(TressedValueError):
+        loader.load(["foo", "bar"], Tuple[int, ...])  # type: ignore[arg-type]
+
+
 def test_load_tuple() -> None:
     loader = Loader()
     assert loader.load([], tuple[()]) == ()
@@ -106,6 +162,19 @@ def test_load_tuple() -> None:
 
     with pytest.raises(TressedValueError):
         loader.load([1, True, "foo"], tuple[int, bool, float])
+
+
+def test_load_tuple_legacy() -> None:
+    from typing import Tuple
+
+    loader = Loader()
+    assert loader.load([], Tuple[()]) == ()  # type: ignore[arg-type]
+    assert loader.load([1], Tuple[int]) == (1,)  # type: ignore[arg-type]
+    assert loader.load([1, True], Tuple[int, bool]) == (1, True)  # type: ignore[arg-type]
+    assert loader.load([1, True, 1.1], Tuple[int, bool, float]) == (1, True, 1.1)  # type: ignore[arg-type]
+
+    with pytest.raises(TressedValueError):
+        loader.load([1, True, "foo"], Tuple[int, bool, float])  # type: ignore[arg-type]
 
 
 def test_load_newtype() -> None:
@@ -657,7 +726,7 @@ def test_load_optional() -> None:
         assert loader.load("foo", int | None)
 
 
-def test_load_legacy_optional() -> None:
+def test_load_optional_legacy() -> None:
     from typing import Optional, Union
 
     loader = Loader()

@@ -92,10 +92,16 @@ def is_generic_tuple_type(type_form: TypeForm) -> bool:
     origin = get_origin(type_form)
     if origin is None:
         return False
+
+    if get_args(type_form) is None:
+        return False
+
     if origin is tuple:
         return True
+
     if typing := sys.modules.get("typing"):
         return origin is typing.Tuple
+
     return False
 
 
@@ -103,10 +109,16 @@ def is_generic_list_type(type_form: TypeForm) -> bool:
     origin = get_origin(type_form)
     if origin is None:
         return False
+
+    if get_args(type_form) is None:
+        return False
+
     if origin is list:
         return True
+
     if typing := sys.modules.get("typing"):
         return origin is typing.List
+
     return False
 
 
@@ -114,10 +126,16 @@ def is_generic_set_type(type_form: TypeForm) -> bool:
     origin = get_origin(type_form)
     if origin is None:
         return False
+
+    if get_args(type_form) is None:
+        return False
+
     if origin is set:
         return True
+
     if typing := sys.modules.get("typing"):
         return origin is typing.Set
+
     return False
 
 
@@ -125,10 +143,16 @@ def is_generic_frozenset_type(type_form: TypeForm) -> bool:
     origin = get_origin(type_form)
     if origin is None:
         return False
+
+    if get_args(type_form) is None:
+        return False
+
     if origin is frozenset:
         return True
+
     if typing := sys.modules.get("typing"):
         return origin is typing.FrozenSet
+
     return False
 
 
