@@ -112,14 +112,14 @@ class Dumper:
         from tressed.alias import (
             AliasResolver,
             compose_alias_fn,
-            identity_alias_fn,
+            to_identity,
             make_maybe_dataclass_alias_fn,
         )
 
         if alias_field:
             alias_fn = compose_alias_fn(
                 make_maybe_dataclass_alias_fn(alias_field=alias_field),
-                alias_fn if alias_fn is not None else identity_alias_fn,
+                alias_fn if alias_fn is not None else to_identity,
             )
 
         if alias_resolver_factory is None:

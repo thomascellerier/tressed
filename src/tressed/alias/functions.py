@@ -2,40 +2,22 @@ TYPE_CHECKING = False
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from tressed.alias.types import Alias, AliasFn, TypePathAliasFn
     from tressed.type_form import TypeForm
     from tressed.type_path import TypePath
 
-
 __all__ = [
-    "AliasResolver",
     "normalize_alias_fn",
-    "identity_alias_fn",
     "make_maybe_dataclass_alias_fn",
     "compose_alias_fn",
+    "to_identity",
     "to_camel",
     "to_pascal",
 ]
 
-if TYPE_CHECKING:
-    type Alias = str
-    type SimpleAliasFn[AliasT = Alias] = Callable[[str], AliasT]
-    type TypeFormAliasFn[AliasT = Alias] = Callable[[str, TypeForm], AliasT]
-    type TypePathAliasFn[AliasT = Alias] = Callable[[str, TypeForm, TypePath], AliasT]
-    type AliasFn[AliasT = Alias] = (
-        SimpleAliasFn[AliasT] | TypeFormAliasFn[AliasT] | TypePathAliasFn[AliasT]
-    )
-
-    __all__ += [
-        "Alias",
-        "SimpleAliasFn",
-        "TypeFormAliasFn",
-        "TypePathAliasFn",
-        "AliasFn",
-    ]
-
 
 def normalize_alias_fn[AliasT = Alias](
-    alias_fn: SimpleAliasFn[AliasT] | TypeFormAliasFn[AliasT] | AliasFn[AliasT],
+    alias_fn: AliasFn[AliasT],
 ) -> TypePathAliasFn[AliasT]:
     """
     Normalize alias fn to a type path alias fn.
@@ -69,7 +51,7 @@ def normalize_alias_fn[AliasT = Alias](
             assert False, "unreachable"
 
 
-def identity_alias_fn(name: str) -> str:
+def to_identity(name: str) -> str:
     return name
 
 
@@ -137,7 +119,7 @@ def make_maybe_dataclass_alias_fn(alias_field: str) -> AliasFn[Alias | None]:
 
 def compose_alias_fn(
     *alias_fns: AliasFn[Alias | None],
-    default_alias_fn: AliasFn[Alias] = identity_alias_fn,
+    default_alias_fn: AliasFn[Alias] = to_identity,
 ) -> TypePathAliasFn:
     """
     Create an alias function by composing several alias functions.
@@ -156,28 +138,3 @@ def compose_alias_fn(
         return normalized_default_alias_fn(name, type_form, type_path)
 
     return _composed_alias_fn
-
-
-class AliasResolver:
-    def __init__(
-        self, alias_fn: AliasFn | None = None, cache_resolved_aliases: bool = True
-    ) -> None:
-        if alias_fn is None:
-            alias_fn = identity_alias_fn
-        self._alias_fn = normalize_alias_fn(alias_fn)
-        self._cache: dict[tuple[str, TypeForm, TypePath], Alias] = {}
-        self.resolve = (
-            self._resolve_cached if cache_resolved_aliases else self._alias_fn
-        )
-
-    def _resolve_cached(
-        self, name: str, type_form: TypeForm, type_path: TypePath
-    ) -> Alias:
-        cache_key = (name, type_form, type_path)
-        if (alias := self._cache.get(cache_key)) is not None:
-            return alias
-
-        alias = self._alias_fn(name, type_form, type_path)
-
-        self._cache[cache_key] = alias
-        return alias
