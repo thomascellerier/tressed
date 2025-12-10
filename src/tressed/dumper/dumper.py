@@ -1,3 +1,10 @@
+"""
+Dump the specified value to python basic types suitable for serialization.
+Note that contrarily from Loader, the Dumper operates on concrete values and types.
+
+Supports aliases.
+"""
+
 from tressed.exceptions import TressedTypeError, TressedValueError
 
 TYPE_CHECKING = False

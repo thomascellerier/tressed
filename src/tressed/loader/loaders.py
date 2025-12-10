@@ -9,9 +9,8 @@ if TYPE_CHECKING:
     from collections.abc import Iterator
     from typing import Any
 
-    from typing_extensions import TypeForm
-
     from tressed.loader.types import LoaderProtocol, TypePath
+    from tressed.type_form import TypeForm
 
 __all__ = [
     "load_identity",

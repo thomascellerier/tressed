@@ -198,5 +198,4 @@ def test_dump_path() -> None:
         def __fspath__(self) -> str:
             return "/".join(["foo"] * self.value)
 
-    print(dumper.dump(CustomPath(3)))
     assert dumper.dump(CustomPath(3)) == "foo/foo/foo"

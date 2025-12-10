@@ -1,5 +1,9 @@
-# TODO: Use python3.15+ lazy imports instead
-# TODO: Switch to TypeForm https://peps.python.org/pep-0747/ once available
+"""
+Load the specified value from python basic types suitable for serialization to the given type form.
+
+Support alias.
+"""
+
 from __future__ import annotations
 
 from tressed.exceptions import TressedTypeFormError, TressedValueError

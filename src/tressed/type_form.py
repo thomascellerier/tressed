@@ -3,6 +3,8 @@ __all__ = [
 ]
 TYPE_CHECKING = False
 if TYPE_CHECKING:
+    # TODO: Import from typing once PEP-747 is approved.
+    # See https://peps.python.org/pep-0747/
     from typing_extensions import TypeForm
 
     __all__ += ["TypeForm"]

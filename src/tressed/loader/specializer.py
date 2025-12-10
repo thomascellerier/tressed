@@ -2,7 +2,7 @@ TYPE_CHECKING = False
 if TYPE_CHECKING:
     from typing import Any
 
-    from typing_extensions import TypeForm
+    from tressed.type_form import TypeForm
 
     from tressed.loader.types import (
         LoaderProtocol,

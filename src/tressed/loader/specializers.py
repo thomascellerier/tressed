@@ -3,7 +3,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
     from typing import Any, Final
 
-    from typing_extensions import TypeForm
+    from tressed.type_form import TypeForm
 
     from tressed.loader.types import TypeLoaderFn
     from tressed.type_path import TypePath, TypePathItem

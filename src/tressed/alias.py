@@ -2,7 +2,7 @@ TYPE_CHECKING = False
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from typing_extensions import TypeForm
+    from tressed.type_form import TypeForm
 
     from tressed.type_path import TypePath
 
