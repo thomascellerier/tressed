@@ -183,3 +183,20 @@ def test_dump_custom_type() -> None:
         }
     )
     assert dumper.dump(CustomType(123)) == ["Custom value is 123", 123]
+
+
+def test_dump_path() -> None:
+    from pathlib import Path
+
+    dumper = Dumper()
+    assert dumper.dump(Path("/foo/bar")) == "/foo/bar"
+
+    class CustomPath:
+        def __init__(self, value: int) -> None:
+            self.value = value
+
+        def __fspath__(self) -> str:
+            return "/".join(["foo"] * self.value)
+
+    print(dumper.dump(CustomPath(3)))
+    assert dumper.dump(CustomPath(3)) == "foo/foo/foo"

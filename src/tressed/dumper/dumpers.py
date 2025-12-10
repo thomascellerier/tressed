@@ -1,3 +1,4 @@
+import os
 import sys
 
 TYPE_CHECKING = False
@@ -18,6 +19,7 @@ __all__ = [
     "dump_datetime",
     "dump_dataclass",
     "dump_namedtuple",
+    "dump_fspath",
 ]
 
 if TYPE_CHECKING:
@@ -142,3 +144,7 @@ def dump_namedtuple(value: Any, type_path: TypePath, dumper: DumperProtocol) -> 
         alias = dumper._resolve_alias(type(value), type_path, field_name)
         dumped[alias] = dumper._dump(field_value, (*type_path, alias))
     return dumped
+
+
+def dump_fspath(value: Any, type_path: TypePath, dumper: DumperProtocol) -> Dumped:
+    return os.fspath(value)

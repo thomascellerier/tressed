@@ -41,6 +41,7 @@ def _default_type_mappers(specialize: bool) -> dict[TypePredicate, TypeDumperFn]
         dump_dataclass,
         dump_datetime,
         dump_enum,
+        dump_fspath,
         dump_namedtuple,
         dump_simple_scalar,
     )
@@ -48,6 +49,7 @@ def _default_type_mappers(specialize: bool) -> dict[TypePredicate, TypeDumperFn]
         is_dataclass_type,
         is_datetime_type,
         is_enum_type,
+        is_fspath_type,
         is_ipaddress_type,
         is_namedtuple_type,
         is_uuid_type,
@@ -60,6 +62,7 @@ def _default_type_mappers(specialize: bool) -> dict[TypePredicate, TypeDumperFn]
         is_datetime_type: dump_datetime,
         is_dataclass_type: dump_dataclass,
         is_namedtuple_type: dump_namedtuple,
+        is_fspath_type: dump_fspath,
     }
 
 
