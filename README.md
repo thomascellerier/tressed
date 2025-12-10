@@ -23,8 +23,9 @@ Or install using pip:
 $ pip install tressed
 ```
 
-Now we can get going!<br/>
-For simple usecases, you can use the default loader and dumper directly:
+Ok, let's get going!<br/>
+
+For simple use cases, you can use the default loader and dumper directly:
 ```python
 >>> from tressed import load, dump
 >>> from pprint import pprint
@@ -134,7 +135,7 @@ easily loading arguments into data types for simple CLI applications.
 
 ### Type handlers and type mappers
 
-Tressed loaders and dumpers work by mapping type forms to handlers.
+Tressed loaders and dumpers work by mapping type forms to handlers.<br/>
 For example, by default a dataclass will be loaded by `tressed.loader.loaders.load_dataclass` and dumped by `tressed.dumper.dumpers.dump_dataclass`.
 
 When loading or dumping a value, the loader or dumper first checks for an exact match in the type handlers.<br/>
@@ -143,6 +144,7 @@ If no exact match is found it iterates through the type mappers in order until a
 A type mapper maps a type predicate function to a handler.<br/>
 
 A type predicate is a function returning `True` if the type form matches the predicate.<br/>
+
 For example:
 ```python
 >>> from pprint import pprint
