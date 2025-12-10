@@ -171,11 +171,15 @@ def test_load_unknown_type() -> None:
 
     loader = Loader()
 
-    class MadeupType:
-        pass
+    class UnknownType:
+        def __repr__(self) -> str:
+            return f"{self.__class__.__name__}()"
 
-    with pytest.raises(TressedTypeFormError):
-        loader.load(1, MadeupType)
+    with pytest.raises(TressedTypeFormError) as exc_info:
+        loader.load(1, UnknownType)
+    assert (
+        str(exc_info.value) == "Unhandled type form UnknownType at path . for value 1"
+    )
 
     modules_after = frozenset(sys.modules.keys())
     new_modules = frozenset(
@@ -187,6 +191,32 @@ def test_load_unknown_type() -> None:
         }
     )
     assert new_modules == frozenset()
+
+
+def test_load_custom_type() -> None:
+    class CustomType:
+        def __init__(self, value: int) -> None:
+            self.value = value
+
+        def __repr__(self) -> str:
+            return f"{self.__class__.__name__}(value={self.value})"
+
+        def __eq__(self, other: Any) -> bool:
+            return type(other) is type(self) and other.value == self.value
+
+        @classmethod
+        def load(cls, value: Any) -> CustomType:
+            return cls(int(value) * 2)
+
+    loader = Loader(extra_type_loaders={CustomType: lambda v, tf, __, ___: tf.load(v)})
+    assert loader.load(123, CustomType) == CustomType(value=246)
+
+    loader = Loader(
+        extra_type_mappers={
+            lambda t: issubclass(t, CustomType): lambda v, tf, _, __: tf.load(v)
+        }
+    )
+    assert loader.load(123, CustomType) == CustomType(value=246)
 
 
 def test_load_dataclass(mocker: MockerFixture) -> None:

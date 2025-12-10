@@ -68,8 +68,8 @@ class Dumper:
         self,
         *,
         hide_defaults: bool = False,
-        type_dumpers: Mapping[type, TypeDumperFn] | None = None,
-        type_mappers: Mapping[TypePredicate, TypeDumperFn] | None = None,
+        default_type_dumpers: Mapping[type, TypeDumperFn] | None = None,
+        default_type_mappers: Mapping[TypePredicate, TypeDumperFn] | None = None,
         extra_type_dumpers: Mapping[type, TypeDumperFn] | None = None,
         extra_type_mappers: Mapping[TypePredicate, TypeDumperFn] | None = None,
         enable_specialization: bool = False,
@@ -82,19 +82,19 @@ class Dumper:
         alias_resolver_factory: Callable[[AliasFn | None], AliasResolver] | None = None,
     ) -> None:
         # Map a type to its dumper
-        if type_dumpers is None:
+        if default_type_dumpers is None:
             type_dumpers = _default_type_dumpers()
         else:
-            type_dumpers = dict(type_dumpers)
+            type_dumpers = dict(default_type_dumpers)
         if extra_type_dumpers:
             type_dumpers |= extra_type_dumpers
         self._type_dumpers: dict[type, TypeDumperFn] = type_dumpers
 
         # Mapping of type predicate to a dumper
-        if type_mappers is None:
+        if default_type_mappers is None:
             type_mappers = _default_type_mappers(enable_specialization)
         else:
-            type_mappers = dict(type_mappers)
+            type_mappers = dict(default_type_mappers)
         if extra_type_mappers:
             type_mappers |= extra_type_mappers
         self._type_mappers: Mapping[TypePredicate, TypeDumperFn] = type_mappers
