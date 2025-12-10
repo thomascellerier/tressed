@@ -345,7 +345,7 @@ def test_load_dataclass(mocker: MockerFixture) -> None:
     class SomeDataclass:
         foo: str
         bar: str = "bar"
-        baz: list[int] = field(default_factory=lambda: [1, 2, 3])
+        baz: tuple[int, ...] = field(default_factory=lambda: (1, 2, 3))
         bar_bar: tuple[int, str] = field(metadata={"alias": "barBar"}, kw_only=True)
 
     value = {
@@ -355,7 +355,7 @@ def test_load_dataclass(mocker: MockerFixture) -> None:
     expected = SomeDataclass(
         foo="foo",
         bar="bar",
-        baz=[1, 2, 3],
+        baz=(1, 2, 3),
         bar_bar=(2, "humbug"),
     )
     loader = Loader()

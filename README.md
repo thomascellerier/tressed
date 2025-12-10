@@ -9,18 +9,23 @@
 </a>
 </p>
 
-Tressed is a easy to use pure python library to deserialize and serialize to and from Python types.
+Tressed is a straightforwad pure python library to deserialize and serialize to and from python types.
 
 ---
 
 Add tressed to your project using uv:
 ```shell
-$ uv add tressed
+uv add tressed
 ```
 
 Or install using pip:
 ```shell
-$ pip install tressed
+pip install tressed
+```
+
+Then just import tressed and get coding.
+```Python
+import tressed
 ```
 
 Ok, let's get going!<br/>
@@ -43,6 +48,7 @@ For simple use cases, you can use the default loader and dumper directly:
 For more advanced use cases instantiate a Loader and/or a Dumper:
 ```python
 >>> from dataclasses import dataclass, field
+>>> import json
 >>> from pprint import pprint
 >>> 
 >>> from tressed import Loader
@@ -55,11 +61,10 @@ For more advanced use cases instantiate a Loader and/or a Dumper:
 ...     some_default_factory_field: list[int] = field(default_factory=lambda: [1, 2, 3])
 ...     other_field: tuple[int, str] = field(metadata={"alias": "OTHER"}, kw_only=True)
 ...     
->>> raw_value = {
-...     "someField": "foo",
-...     "OTHER": (2, "humbug"),
-... }
-... 
+>>> raw_value = json.loads(
+...     '{"someField": "foo", "OTHER": [2, "humbug"]}'
+... )
+...
 >>> loader = Loader(alias_fn=to_camel)
 >>> value = loader.load(raw_value, SomeDataclass)
 >>> pprint(value)
@@ -73,11 +78,19 @@ SomeDataclass(some_field='foo',
 >>> from tressed.alias import to_pascal
 >>>
 >>> dumper = Dumper(alias_fn=to_pascal)
->>> pprint(dumper.dump(value))
+>>> dumped = dumper.dump(value)
+>>> pprint(dumped)
 {'OTHER': [2, 'humbug'],
  'SomeDefaultFactoryField': [1, 2, 3],
  'SomeDefaultField': 'bar',
  'SomeField': 'foo'}
+
+>>> print(repr(json.dumps(dumped)))
+'{"SomeField": "foo", "SomeDefaultField": "bar", "SomeDefaultFactoryField": [1, 2, 3], "OTHER": [2, "humbug"]}'
+
+>>> dumper = Dumper(hide_defaults=True, alias_field=None)
+>>> print(json.dumps(dumper.dump(value)))
+{"some_field": "foo", "other_field": [2, "humbug"]}
 
 ```
 
@@ -290,20 +303,6 @@ And a dumper only serializing a custom `Password` type to a string containing on
 >>> pprint(dumper.dump(Password("foobar")))
 '******'
 
-```
-
-## Installation
-
-Using pip:
-
-Or using uv:
-```bash
-uv add tressed
-```
-
-Then just import tressed and get coding.
-```Python
-import tressed
 ```
 
 ## Goals

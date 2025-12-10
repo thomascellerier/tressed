@@ -168,16 +168,24 @@ def load_dataclass[T](
     value: Any, type_form: TypeForm[T], type_path: TypePath, loader: LoaderProtocol
 ) -> T:
     from dataclasses import fields
+    from typing import get_type_hints
 
     loaded = {}
 
+    type_hints = get_type_hints(type_form)
     for field in fields(type_form):  # type: ignore[arg-type]
         field_name = field.name
         alias = loader._resolve_alias(type_form, type_path, field_name)
         if not field.init:
             continue
+
+        if (field_type := type_hints.get(field_name)) is None:
+            continue
+
         if (field_value := value.get(alias, _MISSING)) is not _MISSING:
-            loaded[field_name] = field_value
+            loaded[field_name] = loader._load(
+                field_value, field_type, (*type_path, alias)
+            )
     return type_form(**loaded)
 
 
