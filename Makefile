@@ -16,7 +16,11 @@ fmt:
 
 .PHONY: pytest
 pytest:
-	uv run pytest --cov=tressed -vv
+	uv run pytest -vv --cov=tressed --benchmark-disable
+
+.PHONY: pytest-benchmark
+pytest-benchmark:
+	uv run pytest -vv --benchmark-only
 
 .PHONY: ty
 ty-check:
