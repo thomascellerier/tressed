@@ -7,7 +7,7 @@ from pytest_benchmark.fixture import BenchmarkFixture
 from pytest_mock import MockerFixture
 
 from tressed.exceptions import (
-    TressedTypeError,
+    TressedTypeFormError,
     TressedValueError,
 )
 from tressed.loader import Loader
@@ -51,7 +51,7 @@ def test_load_list() -> None:
     loader = Loader()
     assert loader.load([1, 2, 3], list[int]) == [1, 2, 3]
 
-    with pytest.raises(TressedTypeError):
+    with pytest.raises(TressedTypeFormError):
         loader.load(["foo", "bar"], list)
 
     with pytest.raises(TressedValueError):
@@ -64,7 +64,7 @@ def test_load_set() -> None:
     assert type(loaded) is set
     assert loaded == {1, 2, 3}
 
-    with pytest.raises(TressedTypeError):
+    with pytest.raises(TressedTypeFormError):
         loader.load(["foo", "bar"], set)
 
     with pytest.raises(TressedValueError):
@@ -77,7 +77,7 @@ def test_load_frozenset() -> None:
     assert type(loaded) is frozenset
     assert loaded == frozenset({1, 2, 3})
 
-    with pytest.raises(TressedTypeError):
+    with pytest.raises(TressedTypeFormError):
         loader.load(["foo", "bar"], frozenset)
 
     with pytest.raises(TressedValueError):
@@ -88,7 +88,7 @@ def test_load_homogeneous_tuple() -> None:
     loader = Loader()
     assert loader.load([1, 2, 3], tuple[int, ...]) == (1, 2, 3)
 
-    with pytest.raises(TressedTypeError):
+    with pytest.raises(TressedTypeFormError):
         loader.load(["foo", "bar"], tuple)
 
     with pytest.raises(TressedValueError):
@@ -174,7 +174,7 @@ def test_load_unknown_type() -> None:
     class MadeupType:
         pass
 
-    with pytest.raises(TressedTypeError):
+    with pytest.raises(TressedTypeFormError):
         loader.load(1, MadeupType)
 
     modules_after = frozenset(sys.modules.keys())
@@ -398,7 +398,7 @@ def test_load_typeddict_closed() -> None:
         )
 
     assert str(exc_info.value) == (
-        "Failed to load value of type dict at path . into type SomeTypedDict: "
+        "Failed to load value of type dict at path . into type form SomeTypedDict: "
         "extra keys 'bar', 'baz', 'buz': {'foo': 123, 'bar': 'bar', 'buz': 'BUZ', 'baz': 'BAZ'}"
     )
 
@@ -516,7 +516,7 @@ def test_load_literal() -> None:
     with pytest.raises(TressedValueError) as exc_info:
         loader.load(5, Foo)
     assert str(exc_info.value) == (
-        "Failed to load value of type int at path . into type Literal[1, 2, 3, 'foo']: "
+        "Failed to load value of type int at path . into type form Literal[1, 2, 3, 'foo']: "
         "got value 5 but expected one of: 1, 2, 3, 'foo'"
     )
 
@@ -544,9 +544,9 @@ def test_load_generic_type_alias() -> None:
 
     with pytest.raises(TressedValueError) as exc_info:
         loader.load((1, 0), Pair) == (1, 0)
-    assert (
-        str(exc_info.value)
-        == "Failed to load value of type tuple at path . into type Pair[T=?]: type form should have only concrete type parameters"
+    assert str(exc_info.value) == (
+        "Failed to load value of type tuple at path . into type form Pair[T=?]: "
+        "type form should have only concrete type parameters"
     )
 
     type SomeMapping[K, V] = dict[K, V]
@@ -556,16 +556,16 @@ def test_load_generic_type_alias() -> None:
 
     with pytest.raises(TressedValueError) as exc_info:
         loader.load({"foo": 1}, IntMapping)
-    assert (
-        str(exc_info.value)
-        == "Failed to load value of type dict at path . into type IntMapping[K=?]: type form should have only concrete type parameters"
+    assert str(exc_info.value) == (
+        "Failed to load value of type dict at path . into type form IntMapping[K=?]: "
+        "type form should have only concrete type parameters"
     )
 
     with pytest.raises(TressedValueError) as exc_info:
         loader.load({"foo": 1}, SomeMapping[int])  # type: ignore[arg-type]
-    assert (
-        str(exc_info.value)
-        == "Failed to load value of type dict at path . into type SomeMapping[K=int, V=?]: type form should have only concrete type parameters"
+    assert str(exc_info.value) == (
+        "Failed to load value of type dict at path . into type form SomeMapping[K=int, V=?]: "
+        "type form should have only concrete type parameters"
     )
 
 
@@ -613,11 +613,11 @@ def test_load_union() -> None:
         loader.load([1, 2], int | str)
     assert (
         str(exc_info.value)
-        == "Failed to load value of type list at path . into type int | str (2 sub-exceptions)"
+        == "Failed to load value of type list at path . into type form int | str (2 sub-exceptions)"
     )
     assert [str(e) for e in exc_info.value.exceptions] == [
-        "Failed to load value of type list at path . into type int",
-        "Failed to load value of type list at path . into type str",
+        "Failed to load value of type list at path . into type form int",
+        "Failed to load value of type list at path . into type form str",
     ]
 
 
@@ -633,11 +633,11 @@ def test_load_legacy_union() -> None:
         loader.load([1, 2], Union[int, str])
     assert (
         str(exc_info.value)
-        == "Failed to load value of type list at path . into type int | str (2 sub-exceptions)"
+        == "Failed to load value of type list at path . into type form int | str (2 sub-exceptions)"
     )
     assert [str(e) for e in exc_info.value.exceptions] == [
-        "Failed to load value of type list at path . into type int",
-        "Failed to load value of type list at path . into type str",
+        "Failed to load value of type list at path . into type form int",
+        "Failed to load value of type list at path . into type form str",
     ]
 
 
@@ -710,9 +710,9 @@ def test_load_discriminated_union_first_match() -> None:
     ) == Bar(tag="BAR", field2=123, field3=1.23, field5=(6, 7))
     with pytest.raises(TressedValueError) as exc_info:
         loader.load({"tag": "baz", "field2": 123, "field3": 1.23}, TaggedUnion)
-    assert (
-        str(exc_info.value)
-        == "Failed to load value of type dict at path . into type Annotated[Foo | Bar]: value did not match discriminated union discriminant"
+    assert str(exc_info.value) == (
+        "Failed to load value of type dict at path . into type form Annotated[Foo | Bar]: "
+        "value did not match discriminated union discriminant"
     )
 
 
@@ -750,15 +750,15 @@ def test_load_discriminated_union_best_match() -> None:
 
     with pytest.raises(TressedValueError) as exc_info:
         loader.load({"foo": "bar"}, BestUnion)
-    assert (
-        str(exc_info.value)
-        == "Failed to load value of type dict at path . into type Annotated[Foo | Bar]: value did not match discriminated union discriminant"
+    assert str(exc_info.value) == (
+        "Failed to load value of type dict at path . into type form Annotated[Foo | Bar]: "
+        "value did not match discriminated union discriminant"
     )
 
     # ambiguous
     with pytest.raises(TressedValueError) as exc_info:
         loader.load({"field2": "bar"}, BestUnion)
-    assert (
-        str(exc_info.value)
-        == "Failed to load value of type dict at path . into type Annotated[Foo | Bar]: value did not match discriminated union discriminant"
+    assert str(exc_info.value) == (
+        "Failed to load value of type dict at path . into type form Annotated[Foo | Bar]: "
+        "value did not match discriminated union discriminant"
     )

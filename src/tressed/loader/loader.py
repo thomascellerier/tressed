@@ -2,7 +2,7 @@
 # TODO: Switch to TypeForm https://peps.python.org/pep-0747/ once available
 from __future__ import annotations
 
-from tressed.exceptions import TressedTypeError, TressedValueError
+from tressed.exceptions import TressedTypeFormError, TressedValueError
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
@@ -176,7 +176,7 @@ class Loader:
             else:
                 type_loader = None
             if type_loader is None:
-                raise TressedTypeError(value, type_form, type_path)
+                raise TressedTypeFormError(value, type_form, type_path)
 
             # Cache lookup for next time
             self._type_loaders[type_form] = type_loader

@@ -17,7 +17,19 @@ __all__ = [
     "dump_enum",
     "dump_datetime",
     "dump_dataclass",
+    "dump_namedtuple",
 ]
+
+if TYPE_CHECKING:
+    from enum import Enum, auto
+
+    class _MissingType(Enum):
+        _MISSING = auto()
+
+    _MISSING = _MissingType._MISSING
+
+else:
+    _MISSING = object()
 
 
 def dump_identity(value: Any, type_path: TypePath, dumper: DumperProtocol) -> Dumped:
@@ -82,9 +94,8 @@ def dump_dataclass(value: Any, type_path: TypePath, dumper: DumperProtocol) -> D
         if not field.repr or not field.init:
             continue
 
-        name = field.name
-
-        field_value = getattr(value, name)
+        field_name = field.name
+        field_value = getattr(value, field_name)
 
         if dumper.hide_defaults:
             if (default_value := field.default) is not MISSING:
@@ -110,7 +121,24 @@ def dump_dataclass(value: Any, type_path: TypePath, dumper: DumperProtocol) -> D
                 if not cant_be_default and field_value == default_factory():
                     continue
 
-        alias = dumper._resolve_alias(type(value), type_path, name)
+        alias = dumper._resolve_alias(type(value), type_path, field_name)
         dumped[alias] = dumper._dump(field_value, (*type_path, alias))
 
+    return dumped
+
+
+def dump_namedtuple(value: Any, type_path: TypePath, dumper: DumperProtocol) -> Dumped:
+    dumped = {}
+    for field_name in value._fields:
+        field_value = getattr(value, field_name)
+
+        if dumper.hide_defaults:
+            if (
+                field_default := value._field_defaults.get(field_name, _MISSING)
+            ) is not _MISSING:
+                if field_value == field_default:
+                    continue
+
+        alias = dumper._resolve_alias(type(value), type_path, field_name)
+        dumped[alias] = dumper._dump(field_value, (*type_path, alias))
     return dumped

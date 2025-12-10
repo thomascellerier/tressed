@@ -8,13 +8,12 @@ if TYPE_CHECKING:
     from tressed.alias import Alias, AliasFn, AliasResolver
     from tressed.dumper.types import Dumped, TypeDumperFn
     from tressed.predicates import TypePredicate
-    from tressed.type_form import TypeForm
     from tressed.type_path import TypePath
 
 __all__ = ["Dumper"]
 
 
-def _default_type_dumpers() -> Mapping[type, TypeDumperFn]:
+def _default_type_dumpers() -> dict[type, TypeDumperFn]:
     from tressed.dumper.dumpers import (
         dump_complex,
         dump_identity,
@@ -37,11 +36,12 @@ def _default_type_dumpers() -> Mapping[type, TypeDumperFn]:
     }
 
 
-def _default_type_mappers(specialize: bool) -> Mapping[TypePredicate, TypeDumperFn]:
+def _default_type_mappers(specialize: bool) -> dict[TypePredicate, TypeDumperFn]:
     from tressed.dumper.dumpers import (
         dump_dataclass,
         dump_datetime,
         dump_enum,
+        dump_namedtuple,
         dump_simple_scalar,
     )
     from tressed.predicates import (
@@ -49,6 +49,7 @@ def _default_type_mappers(specialize: bool) -> Mapping[TypePredicate, TypeDumper
         is_datetime_type,
         is_enum_type,
         is_ipaddress_type,
+        is_namedtuple_type,
         is_uuid_type,
     )
 
@@ -58,6 +59,7 @@ def _default_type_mappers(specialize: bool) -> Mapping[TypePredicate, TypeDumper
         is_enum_type: dump_enum,
         is_datetime_type: dump_datetime,
         is_dataclass_type: dump_dataclass,
+        is_namedtuple_type: dump_namedtuple,
     }
 
 
@@ -68,6 +70,8 @@ class Dumper:
         hide_defaults: bool = False,
         type_dumpers: Mapping[type, TypeDumperFn] | None = None,
         type_mappers: Mapping[TypePredicate, TypeDumperFn] | None = None,
+        extra_type_dumpers: Mapping[type, TypeDumperFn] | None = None,
+        extra_type_mappers: Mapping[TypePredicate, TypeDumperFn] | None = None,
         enable_specialization: bool = False,
         # If set enables alias lookup on fields, for example for dataclasses.
         alias_field: str | None = "alias",
@@ -79,17 +83,21 @@ class Dumper:
     ) -> None:
         # Map a type to its dumper
         if type_dumpers is None:
-            self._type_dumpers: dict[type, TypeDumperFn] = dict(_default_type_dumpers())
+            type_dumpers = _default_type_dumpers()
         else:
-            self._type_dumpers = dict(type_dumpers)
+            type_dumpers = dict(type_dumpers)
+        if extra_type_dumpers:
+            type_dumpers |= extra_type_dumpers
+        self._type_dumpers: dict[type, TypeDumperFn] = type_dumpers
 
         # Mapping of type predicate to a dumper
         if type_mappers is None:
-            self._type_mappers: Mapping[TypePredicate, TypeDumperFn] = (
-                _default_type_mappers(enable_specialization)
-            )
+            type_mappers = _default_type_mappers(enable_specialization)
         else:
-            self._type_mappers = dict(type_mappers)
+            type_mappers = dict(type_mappers)
+        if extra_type_mappers:
+            type_mappers |= extra_type_mappers
+        self._type_mappers: Mapping[TypePredicate, TypeDumperFn] = type_mappers
 
         from tressed.alias import (
             AliasResolver,
@@ -110,31 +118,30 @@ class Dumper:
             self._alias_resolver = alias_resolver_factory(alias_fn)
         self.hide_defaults = hide_defaults
 
-    def _resolve_alias(
-        self, type_form: TypeForm, type_path: TypePath, name: str
-    ) -> Alias:
-        return self._alias_resolver.resolve(name, type_form, type_path)
+    def _resolve_alias(self, type_: type, type_path: TypePath, name: str) -> Alias:
+        return self._alias_resolver.resolve(name, type_, type_path)
 
     def _dump(self, value: Any, type_path: TypePath) -> Dumped:
-        type_form = type(value)
-        if (type_dumper := self._type_dumpers.get(type_form)) is None:
+        type_: type = type(value)
+        if (type_dumper := self._type_dumpers.get(type_)) is None:
             for type_predicate, type_dumper in self._type_mappers.items():
-                if type_predicate(type_form):
+                if type_predicate(type_):
                     break
             else:
                 type_dumper = None
             if type_dumper is None:
-                raise TressedTypeError(value, type_form, type_path)
+                raise TressedTypeError(value, type_path)
 
             # Cache lookup for next time
-            self._type_dumpers[type_form] = type_dumper
+            self._type_dumpers[type_] = type_dumper
 
         try:
             return type_dumper(value, type_path, self)
         except TressedValueError:
             raise
         except Exception as e:
-            error = TressedValueError(value, type_form, type_path)
+            # TODO: Different error for load and dump
+            error = TressedValueError(value, type_, type_path)
             error.add_note(f"{type(e)}: {e}")
             raise error from e
 

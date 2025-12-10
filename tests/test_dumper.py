@@ -1,4 +1,7 @@
+import pytest
+
 from tressed.dumper import Dumper
+from tressed.exceptions import TressedTypeError
 
 
 def test_dump_basic_types() -> None:
@@ -128,3 +131,55 @@ def test_dump_dataclass() -> None:
         "barBar": [123, "Hej ho!"],
         "SomeId": "c932f581-6430-4ae1-ad63-85489a0206b2",
     }
+
+
+def test_dump_namedtuple() -> None:
+    from typing import NamedTuple
+
+    from tressed.alias import to_camel
+
+    class SomeNamedTuple(NamedTuple):
+        some_field: int
+        some_default_field: str = "foobar"
+
+    value = SomeNamedTuple(some_field=123)
+
+    dumper = Dumper(alias_fn=to_camel)
+    assert dumper.dump(value) == {"someField": 123, "someDefaultField": "foobar"}
+
+    dumper = Dumper(hide_defaults=True)
+    assert dumper.dump(value) == {"some_field": 123}
+
+
+def test_dump_unknown_type() -> None:
+    class UnknownType:
+        def __repr__(self) -> str:
+            return f"{self.__class__.__name__}()"
+
+    dumper = Dumper()
+
+    with pytest.raises(TressedTypeError) as exc_info:
+        dumper.dump(UnknownType())
+    assert (
+        str(exc_info.value)
+        == "Unhandled type UnknownType at path . for value UnknownType()"
+    )
+
+
+def test_dump_custom_type() -> None:
+    class CustomType:
+        def __init__(self, value: int) -> None:
+            self.value = value
+
+        def dump(self) -> list[str | int]:
+            return [f"Custom value is {self.value}", self.value]
+
+    dumper = Dumper(extra_type_dumpers={CustomType: lambda v, _, __: v.dump()})
+    assert dumper.dump(CustomType(123)) == ["Custom value is 123", 123]
+
+    dumper = Dumper(
+        extra_type_mappers={
+            lambda t: issubclass(t, CustomType): lambda v, _, __: v.dump()
+        }
+    )
+    assert dumper.dump(CustomType(123)) == ["Custom value is 123", 123]

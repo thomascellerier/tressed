@@ -9,6 +9,7 @@ if TYPE_CHECKING:
 __all__ = [
     "TressedError",
     "TressedTypeError",
+    "TressedTypeFormError",
     "TressedValueError",
 ]
 
@@ -18,6 +19,24 @@ class TressedError(Exception):
 
 
 class TressedTypeError(TressedError, TypeError):
+    def __init__(self, value: Any, type_path: TypePath) -> None:
+        self.value = value
+        self.type = type(value)
+        self.type_path = type_path
+        super(TypeError, self).__init__(self.type)
+
+    def __str__(self) -> str:
+        from tressed.type_form import type_form_repr
+        from tressed.type_path import type_path_repr
+
+        return (
+            f"Unhandled type {type_form_repr(self.type)} "
+            f"at path {type_path_repr(self.type_path)} "
+            f"for value {self.value!r}"
+        )
+
+
+class TressedTypeFormError(TressedError, TypeError):
     def __init__(self, value: Any, type_form: TypeForm, type_path: TypePath) -> None:
         self.value = value
         self.type_form = type_form
@@ -58,7 +77,7 @@ class TressedValueError(TressedError, ValueError):
         value = (
             f"Failed to load value of type {type_form_repr(type(self.value))} "
             f"at path {type_path_repr(self.type_path)} "
-            f"into type {type_form_repr(self.type_form)}"
+            f"into type form {type_form_repr(self.type_form)}"
         )
         if self.message:
             value += f": {self.message}"
