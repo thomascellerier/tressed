@@ -113,3 +113,17 @@ def test_alias_resolver_caching_disabled() -> None:
     assert alias_resolver.resolve("foo", str, ("abc", 1)) == "4"
     assert alias_resolver.resolve("foo", str, ("abc", 2)) == "5"
     assert alias_resolver.resolve("foo", str, ("abc", 2)) == "6"
+
+
+def test_callable_alias_fn() -> None:
+    from tressed.alias import AliasResolver
+
+    class AliasClass:
+        def __init__(self, prefix: str) -> None:
+            self.prefix = prefix
+
+        def __call__(self, name: str) -> str:
+            return self.prefix + name
+
+    alias_resolver = AliasResolver(alias_fn=AliasClass("__"))
+    assert alias_resolver.resolve("foobar", int, ()) == "__foobar"

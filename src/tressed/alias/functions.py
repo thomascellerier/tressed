@@ -23,8 +23,17 @@ def normalize_alias_fn[AliasT = Alias](
     Normalize alias fn to a type path alias fn.
     """
     # Avoid importing heavy inspect module, do some manual introspection
-    arg_count = alias_fn.__code__.co_argcount
-    if hasattr(alias_fn, "__self__"):
+    if code := getattr(alias_fn, "__code__", None):
+        fn = alias_fn
+    elif call := getattr(alias_fn, "__call__", None):
+        fn = call
+        code = getattr(call, "__code__", None)
+
+    if code is None:
+        raise ValueError(f"Unsupported alias function {alias_fn!r}")
+
+    arg_count = code.co_argcount
+    if hasattr(fn, "__self__"):
         # Bound method, substract the self argument
         arg_count -= 1
 
