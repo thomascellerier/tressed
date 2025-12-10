@@ -167,21 +167,30 @@ def test_dump_unknown_type() -> None:
 
 
 def test_dump_custom_type() -> None:
+    from typing import Any
+
+    from tressed import TypeForm, TypePath
+    from tressed.dumper import Dumped, DumperProtocol
+
     class CustomType:
         def __init__(self, value: int) -> None:
             self.value = value
 
-        def dump(self) -> list[str | int]:
-            return [f"Custom value is {self.value}", self.value]
+    def _is_custom_type(type_form: TypeForm) -> bool:
+        if type(type_form) is type:
+            return issubclass(type_form, CustomType)
+        else:
+            return False
 
-    dumper = Dumper(extra_type_dumpers={CustomType: lambda v, _, __: v.dump()})
+    def _dump_custom_type(
+        value: Any, type_path: TypePath, dumper: DumperProtocol
+    ) -> Dumped:
+        return [f"Custom value is {value.value}", value.value]
+
+    dumper = Dumper(extra_type_dumpers={CustomType: _dump_custom_type})
     assert dumper.dump(CustomType(123)) == ["Custom value is 123", 123]
 
-    dumper = Dumper(
-        extra_type_mappers={
-            lambda t: issubclass(t, CustomType): lambda v, _, __: v.dump()
-        }
-    )
+    dumper = Dumper(extra_type_mappers={_is_custom_type: _dump_custom_type})
     assert dumper.dump(CustomType(123)) == ["Custom value is 123", 123]
 
 

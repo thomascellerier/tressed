@@ -10,4 +10,4 @@ def __getattr__(name: str) -> str:
         from importlib.metadata import version
 
         return version("tressed")
-    raise AttributeError(f"Package 'tressed.__version__' has no attribute '{name}'")
+    raise AttributeError(f"Package '{__package__}' has no attribute '{name}'")

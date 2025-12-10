@@ -13,14 +13,14 @@ if TYPE_CHECKING:
     from typing import Any
 
     from tressed.alias import Alias, AliasFn, AliasResolver
-    from tressed.dumper.types import Dumped, TypeDumperFn
+    from tressed.dumper.types import Dumped, DumperFn
     from tressed.predicates import TypePredicate
     from tressed.type_path import TypePath
 
 __all__ = ["Dumper"]
 
 
-def _default_type_dumpers() -> dict[type, TypeDumperFn]:
+def _default_type_dumpers() -> dict[type, DumperFn]:
     from tressed.dumper.dumpers import (
         dump_complex,
         dump_identity,
@@ -43,7 +43,7 @@ def _default_type_dumpers() -> dict[type, TypeDumperFn]:
     }
 
 
-def _default_type_mappers(specialize: bool) -> dict[TypePredicate, TypeDumperFn]:
+def _default_type_mappers(specialize: bool) -> dict[TypePredicate, DumperFn]:
     from tressed.dumper.dumpers import (
         dump_dataclass,
         dump_datetime,
@@ -78,10 +78,10 @@ class Dumper:
         self,
         *,
         hide_defaults: bool = False,
-        default_type_dumpers: Mapping[type, TypeDumperFn] | None = None,
-        default_type_mappers: Mapping[TypePredicate, TypeDumperFn] | None = None,
-        extra_type_dumpers: Mapping[type, TypeDumperFn] | None = None,
-        extra_type_mappers: Mapping[TypePredicate, TypeDumperFn] | None = None,
+        default_type_dumpers: Mapping[type, DumperFn] | None = None,
+        default_type_mappers: Mapping[TypePredicate, DumperFn] | None = None,
+        extra_type_dumpers: Mapping[type, DumperFn] | None = None,
+        extra_type_mappers: Mapping[TypePredicate, DumperFn] | None = None,
         enable_specialization: bool = False,
         # If set enables alias lookup on fields, for example for dataclasses.
         alias_field: str | None = "alias",
@@ -98,7 +98,7 @@ class Dumper:
             type_dumpers = dict(default_type_dumpers)
         if extra_type_dumpers:
             type_dumpers |= extra_type_dumpers
-        self._type_dumpers: dict[type, TypeDumperFn] = type_dumpers
+        self._type_dumpers: dict[type, DumperFn] = type_dumpers
 
         # Mapping of type predicate to a dumper
         if default_type_mappers is None:
@@ -107,7 +107,7 @@ class Dumper:
             type_mappers = dict(default_type_mappers)
         if extra_type_mappers:
             type_mappers |= extra_type_mappers
-        self._type_mappers: Mapping[TypePredicate, TypeDumperFn] = type_mappers
+        self._type_mappers: Mapping[TypePredicate, DumperFn] = type_mappers
 
         from tressed.alias import (
             AliasResolver,

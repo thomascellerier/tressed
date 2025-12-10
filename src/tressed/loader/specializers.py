@@ -3,9 +3,8 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
     from typing import Any, Final
 
+    from tressed.loader.types import LoaderFn
     from tressed.type_form import TypeForm
-
-    from tressed.loader.types import TypeLoaderFn
     from tressed.type_path import TypePath, TypePathItem
 
 __all__ = [
@@ -40,7 +39,7 @@ class Codegen:
         self._parts.clear()
         return cached_code
 
-    def exec(self) -> TypeLoaderFn:
+    def exec(self) -> LoaderFn:
         # NOTE: This relies on the source being executed being only trusted and validated inputs.
         globals_: dict[str, Any] = {}
         locals_: dict[str, Any] = {}

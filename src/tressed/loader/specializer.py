@@ -2,22 +2,19 @@ TYPE_CHECKING = False
 if TYPE_CHECKING:
     from typing import Any
 
-    from tressed.type_form import TypeForm
-
     from tressed.loader.types import (
+        LoaderFn,
         LoaderProtocol,
-        TypeLoaderFn,
         TypeLoaderSpecializer,
         TypePath,
     )
+    from tressed.type_form import TypeForm
 
 __all__ = ["SpecializingLoader"]
 
 
 class SpecializingLoader:
-    def __init__(
-        self, loader: TypeLoaderFn, specializer: TypeLoaderSpecializer
-    ) -> None:
+    def __init__(self, loader: LoaderFn, specializer: TypeLoaderSpecializer) -> None:
         self._loader = loader
         self._specialized_loaders: dict[tuple[TypeForm, TypePath], Any] = {}
         self._specializer = specializer

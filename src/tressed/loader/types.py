@@ -6,7 +6,6 @@ if TYPE_CHECKING:
     from typing import Any, Protocol
 
     from tressed.type_form import TypeForm
-
     from tressed.type_path import TypePath
 
     class LoaderProtocol(Protocol):
@@ -17,11 +16,11 @@ if TYPE_CHECKING:
             self, type_form: TypeForm[T], type_path: TypePath, name: str
         ) -> str: ...
 
-    type TypeLoaderFn[T] = Callable[[Any, TypeForm[T], TypePath, LoaderProtocol], T]
+    type LoaderFn[T] = Callable[[Any, TypeForm[T], TypePath, LoaderProtocol], T]
     type TypeLoaderSpecializer[T] = Callable[[TypeForm[T], TypePath], str | None]
 
     __all__ += [
         "LoaderProtocol",
-        "TypeLoaderFn",
+        "LoaderFn",
         "TypeLoaderSpecializer",
     ]

@@ -16,9 +16,8 @@ TYPE_CHECKING = False
 if TYPE_CHECKING:
     from typing import Any
 
-    from tressed.loader.types import LoaderProtocol
-    from tressed.type_form import TypeForm
-    from tressed.type_path import TypePath
+    from tressed import TypeForm, TypePath
+    from tressed.loader import LoaderProtocol
 
 
 def test_load_identity() -> None:
@@ -275,19 +274,24 @@ def test_load_custom_type() -> None:
         def __eq__(self, other: Any) -> bool:
             return type(other) is type(self) and other.value == self.value
 
-        @classmethod
-        def load(cls, value: Any) -> CustomType:
-            return cls(int(value) * 2)
+    def _load_custom_type_double(
+        value: Any, type_form: TypeForm, type_path: TypePath, loader: LoaderProtocol
+    ) -> Any:
+        return CustomType(int(value) * 2)
 
-    loader = Loader(extra_type_loaders={CustomType: lambda v, tf, __, ___: tf.load(v)})
-    assert loader.load(123, CustomType) == CustomType(value=246)
+    loader = Loader(extra_type_loaders={CustomType: _load_custom_type_double})
+    assert loader.load("123", CustomType) == CustomType(value=246)
 
-    loader = Loader(
-        extra_type_mappers={
-            lambda t: issubclass(t, CustomType): lambda v, tf, _, __: tf.load(v)
-        }
-    )
-    assert loader.load(123, CustomType) == CustomType(value=246)
+    def _is_custom_type(type_form: TypeForm) -> bool:
+        return type(type_form) is type and issubclass(type_form, CustomType)
+
+    def _load_custom_type_third(
+        value: Any, type_form: TypeForm, type_path: TypePath, loader: LoaderProtocol
+    ) -> Any:
+        return CustomType(int(value / 3))
+
+    loader = Loader(extra_type_mappers={_is_custom_type: _load_custom_type_third})
+    assert loader.load(123.4, CustomType) == CustomType(value=41)
 
 
 def test_barebones_loader() -> None:

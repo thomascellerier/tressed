@@ -6,16 +6,23 @@ that a type from a module can only be instantiated if it already has been import
 
 For example to check if a type is an instance of foo.Bar, do not do:
 
-    def is_foo_bar[T: type](type_form: T) -> bool:
+    def is_foo_bar(type_form: TypeForm) -> bool:
         import foo
 
-        return subclass(t, foo.Bar)
+        try:
+            return issubclass(t, foo.Bar)
+        except TypeError:
+            return False
 
 But instead:
 
-    def is_foo_bar[T: type](type_form: T) -> bool:
+    def is_foo_bar(type_form: TypeForm) -> bool:
         if foo := sys.modules.get("foo"):
-            retur issubclass(t, foo.Bar)
+            try:
+                return issubclass(t, foo.Bar)
+            except TypeError:
+                return False
+        return False
 """
 
 import sys

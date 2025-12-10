@@ -1,4 +1,5 @@
 __all__ = [
+    "TypeForm",
     "type_form_repr",
 ]
 TYPE_CHECKING = False
@@ -7,7 +8,15 @@ if TYPE_CHECKING:
     # See https://peps.python.org/pep-0747/
     from typing_extensions import TypeForm
 
-    __all__ += ["TypeForm"]
+else:
+
+    def __getattr__(name: str):
+        match name:
+            case "TypeForm":
+                from typing_extensions import TypeForm
+
+                return TypeForm
+        raise AttributeError(f"Package '{__package__}' has no attribute '{name}'")
 
 
 def type_form_repr(type_form: TypeForm) -> str:

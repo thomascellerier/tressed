@@ -5,23 +5,24 @@ if TYPE_CHECKING:
 
     from tressed.type_path import TypePath
 
-__all__ = []
+__all__ = ["Dumped", "DumperProtocol", "DumperFn"]
 
+
+# Dumped type, representing types that can be serialized to json out of the box.
+type Dumped = (
+    int
+    | float
+    | str
+    | bool
+    | list[Dumped]
+    | tuple[Dumped, ...]
+    | dict[str, Dumped]
+    | None
+)
+
+type DumperFn = Callable[[Any, TypePath, DumperProtocol], Dumped]
 
 if TYPE_CHECKING:
-    __all__ += ["Dumped", "DumperProtocol", "TypeDumperFn"]
-
-    # Dumped type, representing types that can be serialized to json out of the box.
-    type Dumped = (
-        int
-        | float
-        | str
-        | bool
-        | list[Dumped]
-        | tuple[Dumped, ...]
-        | dict[str, Dumped]
-        | None
-    )
 
     class DumperProtocol(Protocol):
         def _dump(self, value: Any, type_path: TypePath) -> Dumped: ...
@@ -31,5 +32,6 @@ if TYPE_CHECKING:
 
         @property
         def hide_defaults(self) -> bool: ...
-
-    type TypeDumperFn = Callable[[Any, TypePath, DumperProtocol], Dumped]
+else:
+    # Placeholder type for runtime
+    type DumperProtocol = type

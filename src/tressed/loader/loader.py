@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from typing import Any
 
     from tressed.alias import Alias, AliasFn, AliasResolver
-    from tressed.loader.types import TypeLoaderFn, TypePath
+    from tressed.loader.types import LoaderFn, TypePath
     from tressed.predicates import TypePredicate
     from tressed.type_form import TypeForm
 
@@ -24,7 +24,7 @@ __all__ = [
 ]
 
 
-def _default_type_loaders() -> dict[TypeForm, TypeLoaderFn]:
+def _default_type_loaders() -> dict[TypeForm, LoaderFn]:
     from tressed.loader.loaders import load_complex, load_float, load_identity
 
     return {
@@ -37,7 +37,7 @@ def _default_type_loaders() -> dict[TypeForm, TypeLoaderFn]:
     }
 
 
-def _default_type_mappers(specialize: bool) -> dict[TypePredicate, TypeLoaderFn]:
+def _default_type_mappers(specialize: bool) -> dict[TypePredicate, LoaderFn]:
     from tressed.loader.loaders import (
         load_dataclass,
         load_datetime,
@@ -122,10 +122,10 @@ class Loader:
     def __init__(
         self,
         *,
-        default_type_loaders: Mapping[TypeForm, TypeLoaderFn] | None = None,
-        default_type_mappers: Mapping[TypePredicate, TypeLoaderFn] | None = None,
-        extra_type_loaders: Mapping[TypeForm, TypeLoaderFn] | None = None,
-        extra_type_mappers: Mapping[TypePredicate, TypeLoaderFn] | None = None,
+        default_type_loaders: Mapping[TypeForm, LoaderFn] | None = None,
+        default_type_mappers: Mapping[TypePredicate, LoaderFn] | None = None,
+        extra_type_loaders: Mapping[TypeForm, LoaderFn] | None = None,
+        extra_type_mappers: Mapping[TypePredicate, LoaderFn] | None = None,
         enable_specialization: bool = False,
         # If set enables alias lookup on fields, for example for dataclasses.
         alias_field: str | None = "alias",
@@ -142,7 +142,7 @@ class Loader:
             type_loaders = dict(default_type_loaders)
         if extra_type_loaders:
             type_loaders |= extra_type_loaders
-        self._type_loaders: dict[TypeForm, TypeLoaderFn] = type_loaders
+        self._type_loaders: dict[TypeForm, LoaderFn] = type_loaders
 
         # Mapping of type predicate to a loader
         if default_type_mappers is None:
@@ -151,7 +151,7 @@ class Loader:
             type_mappers = dict(default_type_mappers)
         if extra_type_mappers:
             type_mappers |= extra_type_mappers
-        self._type_mappers: Mapping[TypePredicate, TypeLoaderFn] = type_mappers
+        self._type_mappers: Mapping[TypePredicate, LoaderFn] = type_mappers
 
         from tressed.alias import (
             AliasResolver,

@@ -3,7 +3,6 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     from tressed.type_form import TypeForm
-
     from tressed.type_path import TypePath
 
 

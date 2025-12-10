@@ -2,9 +2,11 @@ TYPE_CHECKING = False
 if TYPE_CHECKING:
     from tressed.dumper.dumper import Dumper
     from tressed.loader.loader import Loader
+    from tressed.type_form import TypeForm
+    from tressed.type_path import TypePath
 
 
-__all__ = ["Loader", "Dumper", "load", "dump"]
+__all__ = ["Loader", "Dumper", "load", "dump", "TypeForm", "TypePath"]
 
 
 if TYPE_CHECKING:
@@ -16,7 +18,7 @@ if TYPE_CHECKING:
 
 else:
 
-    def __getattr__(name: str) -> type[Loader] | type[Dumper]:
+    def __getattr__(name: str):
         match name:
             case "Loader":
                 from tressed.loader.loader import Loader
@@ -43,6 +45,16 @@ else:
 
                     _default_dumper = Dumper()
                 return _default_dumper.dump
+
+            case "TypeForm":
+                from tressed.type_form import TypeForm
+
+                return TypeForm
+
+            case "TypePath":
+                from tressed.type_path import TypePath
+
+                return TypePath
 
             case _:
                 raise AttributeError(
