@@ -1,7 +1,7 @@
 """
 Load the specified value from python basic types suitable for serialization to the given type form.
 
-Support alias.
+Supports aliases.
 """
 
 from __future__ import annotations

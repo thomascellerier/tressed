@@ -19,10 +19,16 @@ class TressedError(Exception):
 
 
 class TressedTypeError(TressedError, TypeError):
-    def __init__(self, value: Any, type_path: TypePath) -> None:
+    def __init__(
+        self,
+        value: Any,
+        type_path: TypePath,
+        message: str = "",
+    ) -> None:
         self.value = value
         self.type = type(value)
         self.type_path = type_path
+        self.message = message
         super(TypeError, self).__init__(self.type)
 
     def __str__(self) -> str:
@@ -32,15 +38,18 @@ class TressedTypeError(TressedError, TypeError):
         return (
             f"Unhandled type {type_form_repr(self.type)} "
             f"at path {type_path_repr(self.type_path)} "
-            f"for value {self.value!r}"
+            f"for value {self.value!r}{f': {self.message}' if self.message else ''}"
         )
 
 
 class TressedTypeFormError(TressedError, TypeError):
-    def __init__(self, value: Any, type_form: TypeForm, type_path: TypePath) -> None:
+    def __init__(
+        self, value: Any, type_form: TypeForm, type_path: TypePath, message: str = ""
+    ) -> None:
         self.value = value
         self.type_form = type_form
         self.type_path = type_path
+        self.message = message
         super(TypeError, self).__init__(type_form)
 
     def __str__(self) -> str:
@@ -50,7 +59,7 @@ class TressedTypeFormError(TressedError, TypeError):
         return (
             f"Unhandled type form {type_form_repr(self.type_form)} "
             f"at path {type_path_repr(self.type_path)} "
-            f"for value {self.value!r}"
+            f"for value {self.value!r}{f': {self.message}' if self.message else ''}"
         )
 
 

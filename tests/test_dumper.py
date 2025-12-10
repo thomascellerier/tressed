@@ -185,6 +185,22 @@ def test_dump_custom_type() -> None:
     assert dumper.dump(CustomType(123)) == ["Custom value is 123", 123]
 
 
+def test_barebones_dumper() -> None:
+    dumper = Dumper(
+        default_type_dumpers={int: lambda v, _, __: "*" * v},
+        default_type_mappers={lambda t: t is tuple: lambda v, _, __: len(v)},
+    )
+    assert dumper.dump(10) == "**********"
+    assert dumper.dump(("oo", "bar", "baz")) == 3
+
+    with pytest.raises(TressedTypeError) as exc_info:
+        dumper.dump(10.6) == "Unhandled type float at path . for value 10.6"
+
+    with pytest.raises(TressedTypeError) as exc_info:
+        dumper.dump("foo")
+    assert str(exc_info.value) == "Unhandled type str at path . for value 'foo'"
+
+
 def test_dump_path() -> None:
     from pathlib import Path
 

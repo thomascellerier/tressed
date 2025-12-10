@@ -16,7 +16,9 @@ TYPE_CHECKING = False
 if TYPE_CHECKING:
     from typing import Any
 
+    from tressed.loader.types import LoaderProtocol
     from tressed.type_form import TypeForm
+    from tressed.type_path import TypePath
 
 
 def test_load_identity() -> None:
@@ -217,6 +219,50 @@ def test_load_custom_type() -> None:
         }
     )
     assert loader.load(123, CustomType) == CustomType(value=246)
+
+
+def test_barebones_loader() -> None:
+    type UpperStr = str
+    type LowerStr = str
+
+    def _load_float_times_five(
+        value: Any, type_form: TypeForm, type_path: TypePath, loader: LoaderProtocol
+    ) -> Any:
+        if type(value) is not float:
+            raise TressedValueError(
+                value,
+                type_form,
+                type_path,
+                message="Sorry pal, can't accept an int for a float!",
+            )
+        return value * 5
+
+    loader = Loader(
+        default_type_loaders={float: _load_float_times_five},
+        default_type_mappers={
+            lambda tf: tf in (UpperStr, LowerStr): lambda v, tf, __, ___: v.upper()
+            if tf is UpperStr
+            else v.lower(),
+        },
+    )
+
+    # Allow floats, but multiply their values by five, don't allow passing an int as float!
+    assert loader.load(5.0, float) == 25.0
+    with pytest.raises(TressedValueError) as exc_info_2:
+        assert loader.load(5, float) == 25
+    assert (
+        str(exc_info_2.value)
+        == "Failed to load value of type int at path . into type form float: Sorry pal, can't accept an int for a float!"
+    )
+
+    # Don't allow regular str, only UpperStr and LowerStr
+    with pytest.raises(TressedTypeFormError) as exc_info_1:
+        loader.load("FooBar", str)
+    assert (
+        str(exc_info_1.value) == "Unhandled type form str at path . for value 'FooBar'"
+    )
+    assert loader.load("FooBar", UpperStr) == "FOOBAR"
+    assert loader.load("FooBar", LowerStr) == "foobar"
 
 
 def test_load_dataclass(mocker: MockerFixture) -> None:
