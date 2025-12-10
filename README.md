@@ -13,15 +13,19 @@ Tressed is a easy to use pure python library to deserialize and serialize to and
 
 ---
 
-Install tressed using pip:
+Add tressed to your project using uv:
+```shell
+$ uv add tressed
+```
 
+Or install using pip:
 ```shell
 $ pip install tressed
 ```
 
 Now we can get going!<br/>
 For simple usecases, you can use the default loader and dumper directly:
-```pycon
+```python
 >>> from tressed import load, dump
 >>> from pprint import pprint
 >>>
@@ -36,7 +40,7 @@ For simple usecases, you can use the default loader and dumper directly:
 ```
 
 For more advanced use cases instantiate a Loader and/or a Dumper:
-```pycon
+```python
 >>> from dataclasses import dataclass, field
 >>> from pprint import pprint
 >>> 
@@ -140,7 +144,7 @@ A type mapper maps a type predicate function to a handler.<br/>
 
 A type predicate is a function returning `True` if the type form matches the predicate.<br/>
 For example:
-```pycon
+```python
 >>> from pprint import pprint
 >>> from tressed.predicates import is_generic_list_type
 >>>
@@ -171,7 +175,7 @@ arguments when instantiating a `Dumper` or `Loader`.
 These handlers will be added to the default handlers.
 
 For example, a loader with an additional type handler for a custom type:
-```
+```python
 >>> from pprint import pprint
 >>>
 >>> from tressed.loader import Loader
@@ -196,7 +200,7 @@ For example, a loader with an additional type handler for a custom type:
 ```
 
 Another example, a dumper with an additional type mapper for a custom type:
-```
+```python
 >>> from pprint import pprint
 >>>
 >>> from tressed import Dumper, TypeForm
@@ -230,7 +234,7 @@ To do that pass an empty dictionary for `default_type_mappers` and `default_type
 
 For example, we define loader only supporting exactly a single type alias called `UpperStr` loading
 string into their uppercase version:
-```pycon
+```python
 >>> from pprint import pprint
 >>>
 >>> from tressed import Loader
@@ -259,7 +263,7 @@ Unhandled type form str at path . for value 'foo'
 ```
 
 And a dumper only serializing a custom `Password` type to a string containing only `*` characters:
-```pycon
+```python
 >>> from pprint import pprint
 >>>
 >>> from tressed import Dumper, TypeForm
