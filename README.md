@@ -9,7 +9,7 @@
 </a>
 </p>
 
-Tressed is a straightforwad pure python library to deserialize and serialize to and from python types.
+Tressed is a straightforwad pure python library to deserialize to and serialize from python types.
 
 ---
 
@@ -304,6 +304,116 @@ And a dumper only serializing a custom `Password` type to a string containing on
 '******'
 
 ```
+
+### Aliases
+
+Tressed loaders and dumpers have support for resolving aliases.<br/>
+This enables easily supporting patterns like serializing to and from JSON using, e.g. camelCase or PascalCase.
+
+Both dumpers and loaders use the same `tressed.alias.AliasResolver` class to resolve aliases.
+The alias resolve combines an alias function of type `tressed.alias.AliasFn` with an alias cache.
+
+The loader and dumper use the alias resolver to resolve a field name to an alias.
+By default this is used for `dataclasses.dataclass` and `typing.NamedTuple`.
+This mechanism can easily be used for custom types by calling `{Loader,Dumper}._resolve_alias`.
+
+Generally alias resolution can map a field name directly to an alias.
+To enable more powerful custom behavior alias functions also get passed the type form and type path.
+
+For example `alias_resolver.resolve("some_field", SomeEnum, ("path", "to", "field"))` could be used
+to upper case enum values but camelCase other fields, unless they are top-level:
+```python
+>>> from enum import IntEnum, auto
+>>> from pprint import pprint
+>>>
+>>> from tressed import TypeForm, TypePath
+>>> from tressed.alias import AliasResolver, to_camel
+>>>
+>>> class SomeEnum(IntEnum):
+...     some_field = auto()
+...     some_other_field = auto()
+...
+>>>
+>>> def custom_alias_fn(name: str, type_form: TypeForm, type_path: TypePath) -> str:
+...     if type_form is SomeEnum:
+...         return name.upper()
+...
+...     if len(type_path) > 0:
+...         return to_camel(name)
+...
+...     return name
+>>>    
+>>> alias_resolver = AliasResolver(alias_fn=custom_alias_fn)
+>>>
+>>> pprint(alias_resolver.resolve("some_field", SomeEnum, ("path", "to", "field")))
+'SOME_FIELD'
+>>> pprint(alias_resolver.resolve("some_field", int, ("path", "to", "field")))
+'someField'
+>>> pprint(alias_resolver.resolve("some_field", int, ()))
+'some_field'
+
+```
+
+The `type_form`and `type_path` parameters are optional, the `AliasResolver` normalizes alias functions to the
+3 parameter form by wrapping them in a function discarding any unused arguments.
+
+By default the alias resolve caches the result of the alias resolution for the given arguments.
+This is to avoid repeatidly doing expensive type introspection.
+This behavior can be disabled by passing `cache_resolved_aliases=False` when instantiating the alias resolver.
+
+#### Built-in alias functions
+
+A few commonly used alias functions are provided by tressed as part of the `tressed.alias` module:
+- `to_camel`: Convert field name to camelCase.
+- `to_pascal`: Convert field name to PascalCase.
+- `to_identity`: Use field name as is, the default behavior.
+
+#### Composing alias functions
+
+An alias resolve accepts a single alias function.
+Several alias functions can be composed into a single alias function to enable more advanced behavior.
+
+The built-in `tressed.alias.compose_alias_fn` allows composing several alias functions together, returning
+a single alias functio suitable as an argument to an `AliasResolver`.
+
+It accepts a variadic number of optional alias functions, that is functions returning an alias or `None`.
+If a function returns an alias it is used as is, else the next alias function is tried.
+Finally if no optional alias function matches, the default alias function is used, by default `to_identity`.
+
+For example:
+```python
+>>> from pprint import pprint
+>>> from tressed.alias import compose_alias_fn
+>>>
+>>> def maybe_to_upper(name: str) -> str | None:
+...     if name.casefold().startswith("foo"):
+...         return name.upper()
+...     return None
+...
+>>> def maybe_to_lower(name: str) -> str | None:
+...     if name.casefold().startswith("bar"):
+...         return name.lower()
+...     return None
+...
+>>> def to_underscores(name: str) -> str:
+...     return "_"*len(name)
+...
+>>> alias_fn = compose_alias_fn(maybe_to_upper, maybe_to_lower, default_alias_fn=to_underscores)
+>>>
+>>> pprint(alias_fn("FooBar", str, ()))
+'FOOBAR'
+
+>>> pprint(alias_fn("BarBar", str, ()))
+'barbar'
+
+>>> pprint(alias_fn("Baz", str, ()))
+'___'
+
+```
+
+This mechanism is used by the loader and dumper to combine a dataclass field alias function, allowing per field
+aliases with a user provided alias function like `to_camel`. This can be disabled by passing `alias_field=None` when
+instantiating a loader or dumper.
 
 ## Goals
 
