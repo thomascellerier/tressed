@@ -4,3 +4,6 @@ __pycache__/
 # python package
 dist/
 src/tressed.egg-info/
+
+# coverage
+.coverage

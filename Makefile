@@ -16,7 +16,7 @@ fmt:
 
 .PHONY: pytest
 pytest:
-	uv run pytest -vv
+	uv run pytest --cov=tressed -vv
 
 .PHONY: ty
 ty-check:
