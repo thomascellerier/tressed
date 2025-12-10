@@ -130,9 +130,15 @@ easily loading arguments into data types for simple CLI applications.
 
 ### Type handlers and type mappers
 
-A type handler maps an exact type form to a handler.<br/>
-A type mapper maps a type predicate function to a handler. A type predicate is a function returning True if the
-type_form matches the predicate.<br/>
+Tressed loaders and dumpers work by mapping type forms to handlers.
+For example, by default a dataclass will be loaded by `tressed.loader.loaders.load_dataclass` and dumped by `tressed.dumper.dumpers.dump_dataclass`.
+
+When loading or dumping a value, the loader or dumper first checks for an exact match in the type handlers.<br/>
+
+If no exact match is found it iterates through the type mappers in order until a type predicate returns `True`.<br/>
+A type mapper maps a type predicate function to a handler.<br/>
+
+A type predicate is a function returning `True` if the type form matches the predicate.<br/>
 For example:
 ```pycon
 >>> from pprint import pprint
@@ -152,9 +158,8 @@ False
 
 ```
 
-When loading or dumping a value, the loader or dumper first checks for an exact match in the type handlers.<br/>
-If no exact match is found it iterates through the type mappers in order until a type predicate returns True.<br/>
-In that case an entry is added for this type form to the type handlers.<br/>
+If a predicate matches the given type, the corresponding handler is used.<br>
+Additionally it is added as an entry in the type handlers to enable a quick lookup the next time the same type form is encountered.<br/>
 
 If a handler was found the handler is called on the given arguments.<br/>
 If no handler was a found a `tressed.exception.TressedTypeError` is raised.<br/>
