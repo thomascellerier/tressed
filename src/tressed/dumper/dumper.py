@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 __all__ = ["Dumper"]
 
 
-def _default_type_dumpers() -> dict[type, DumperFn]:
+def _default_type_handlers() -> dict[type, DumperFn]:
     from tressed.dumper.dumpers import (
         dump_complex,
         dump_identity,
@@ -78,9 +78,9 @@ class Dumper:
         self,
         *,
         hide_defaults: bool = False,
-        default_type_dumpers: Mapping[type, DumperFn] | None = None,
+        default_type_handlers: Mapping[type, DumperFn] | None = None,
         default_type_mappers: Mapping[TypePredicate, DumperFn] | None = None,
-        extra_type_dumpers: Mapping[type, DumperFn] | None = None,
+        extra_type_handlers: Mapping[type, DumperFn] | None = None,
         extra_type_mappers: Mapping[TypePredicate, DumperFn] | None = None,
         enable_specialization: bool = False,
         # If set enables alias lookup on fields, for example for dataclasses.
@@ -92,13 +92,13 @@ class Dumper:
         alias_resolver_factory: Callable[[AliasFn | None], AliasResolver] | None = None,
     ) -> None:
         # Map a type to its dumper
-        if default_type_dumpers is None:
-            type_dumpers = _default_type_dumpers()
+        if default_type_handlers is None:
+            type_handlers = _default_type_handlers()
         else:
-            type_dumpers = dict(default_type_dumpers)
-        if extra_type_dumpers:
-            type_dumpers |= extra_type_dumpers
-        self._type_dumpers: dict[type, DumperFn] = type_dumpers
+            type_handlers = dict(default_type_handlers)
+        if extra_type_handlers:
+            type_handlers |= extra_type_handlers
+        self._type_handlers: dict[type, DumperFn] = type_handlers
 
         # Mapping of type predicate to a dumper
         if default_type_mappers is None:
@@ -133,7 +133,7 @@ class Dumper:
 
     def _dump(self, value: Any, type_path: TypePath) -> Dumped:
         type_: type = type(value)
-        if (type_dumper := self._type_dumpers.get(type_)) is None:
+        if (type_dumper := self._type_handlers.get(type_)) is None:
             for type_predicate, type_dumper in self._type_mappers.items():
                 if type_predicate(type_):
                     break
@@ -143,7 +143,7 @@ class Dumper:
                 raise TressedTypeError(value, type_path)
 
             # Cache lookup for next time
-            self._type_dumpers[type_] = type_dumper
+            self._type_handlers[type_] = type_dumper
 
         try:
             return type_dumper(value, type_path, self)

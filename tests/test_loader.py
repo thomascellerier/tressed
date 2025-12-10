@@ -279,7 +279,7 @@ def test_load_custom_type() -> None:
     ) -> Any:
         return CustomType(int(value) * 2)
 
-    loader = Loader(extra_type_loaders={CustomType: _load_custom_type_double})
+    loader = Loader(extra_type_handlers={CustomType: _load_custom_type_double})
     assert loader.load("123", CustomType) == CustomType(value=246)
 
     def _is_custom_type(type_form: TypeForm) -> bool:
@@ -311,7 +311,7 @@ def test_barebones_loader() -> None:
         return value * 5
 
     loader = Loader(
-        default_type_loaders={float: _load_float_times_five},
+        default_type_handlers={float: _load_float_times_five},
         default_type_mappers={
             lambda tf: tf in (UpperStr, LowerStr): lambda v, tf, __, ___: v.upper()
             if tf is UpperStr

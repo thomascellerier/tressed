@@ -24,7 +24,7 @@ __all__ = [
 ]
 
 
-def _default_type_loaders() -> dict[TypeForm, LoaderFn]:
+def _default_type_handlers() -> dict[TypeForm, LoaderFn]:
     from tressed.loader.loaders import load_complex, load_float, load_identity
 
     return {
@@ -122,9 +122,9 @@ class Loader:
     def __init__(
         self,
         *,
-        default_type_loaders: Mapping[TypeForm, LoaderFn] | None = None,
+        default_type_handlers: Mapping[TypeForm, LoaderFn] | None = None,
         default_type_mappers: Mapping[TypePredicate, LoaderFn] | None = None,
-        extra_type_loaders: Mapping[TypeForm, LoaderFn] | None = None,
+        extra_type_handlers: Mapping[TypeForm, LoaderFn] | None = None,
         extra_type_mappers: Mapping[TypePredicate, LoaderFn] | None = None,
         enable_specialization: bool = False,
         # If set enables alias lookup on fields, for example for dataclasses.
@@ -136,13 +136,13 @@ class Loader:
         alias_resolver_factory: Callable[[AliasFn | None], AliasResolver] | None = None,
     ) -> None:
         # Map a type form to its loader
-        if default_type_loaders is None:
-            type_loaders = _default_type_loaders()
+        if default_type_handlers is None:
+            type_handlers = _default_type_handlers()
         else:
-            type_loaders = dict(default_type_loaders)
-        if extra_type_loaders:
-            type_loaders |= extra_type_loaders
-        self._type_loaders: dict[TypeForm, LoaderFn] = type_loaders
+            type_handlers = dict(default_type_handlers)
+        if extra_type_handlers:
+            type_handlers |= extra_type_handlers
+        self._type_handlers: dict[TypeForm, LoaderFn] = type_handlers
 
         # Mapping of type predicate to a loader
         if default_type_mappers is None:
@@ -177,7 +177,7 @@ class Loader:
         return self._alias_resolver.resolve(name, type_form, type_path)
 
     def _load[T](self, value: Any, type_form: TypeForm[T], type_path: TypePath) -> T:
-        if (type_loader := self._type_loaders.get(type_form)) is None:
+        if (type_loader := self._type_handlers.get(type_form)) is None:
             for type_predicate, type_loader in self._type_mappers.items():
                 if type_predicate(type_form):
                     break
@@ -187,7 +187,7 @@ class Loader:
                 raise TressedTypeFormError(value, type_form, type_path)
 
             # Cache lookup for next time
-            self._type_loaders[type_form] = type_loader
+            self._type_handlers[type_form] = type_loader
 
         try:
             return type_loader(value, type_form, type_path, self)

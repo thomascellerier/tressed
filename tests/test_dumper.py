@@ -187,7 +187,7 @@ def test_dump_custom_type() -> None:
     ) -> Dumped:
         return [f"Custom value is {value.value}", value.value]
 
-    dumper = Dumper(extra_type_dumpers={CustomType: _dump_custom_type})
+    dumper = Dumper(extra_type_handlers={CustomType: _dump_custom_type})
     assert dumper.dump(CustomType(123)) == ["Custom value is 123", 123]
 
     dumper = Dumper(extra_type_mappers={_is_custom_type: _dump_custom_type})
@@ -196,7 +196,7 @@ def test_dump_custom_type() -> None:
 
 def test_barebones_dumper() -> None:
     dumper = Dumper(
-        default_type_dumpers={int: lambda v, _, __: "*" * v},
+        default_type_handlers={int: lambda v, _, __: "*" * v},
         default_type_mappers={lambda t: t is tuple: lambda v, _, __: len(v)},
     )
     assert dumper.dump(10) == "**********"

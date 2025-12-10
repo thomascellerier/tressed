@@ -16,7 +16,7 @@ fmt:
 
 .PHONY: pytest
 pytest:
-	uv run pytest -vv --cov=tressed --benchmark-disable
+	uv run pytest -vv --cov=tressed --doctest-glob='*.md' --benchmark-disable
 
 .PHONY: pytest-benchmark
 pytest-benchmark:
