@@ -412,8 +412,40 @@ For example:
 ```
 
 This mechanism is used by the loader and dumper to combine a dataclass field alias function, allowing per field
-aliases with a user provided alias function like `to_camel`. This can be disabled by passing `alias_field=None` when
-instantiating a loader or dumper.
+aliases with a user provided alias function like `to_camel`. By default it uses `alias_field="alias"`.<br/>
+This can be disabled by passing `alias_field=None` when instantiating a loader or dumper.
+
+For example:
+```
+>>> from dataclasses import dataclass, field
+>>> from pprint import pprint
+>>>
+>>> from tressed import Dumper
+>>>
+>>> @dataclass
+... class SomeClass:
+...     some_field: int = field(
+...         metadata={
+...             "alias": "SomeField",
+...             "name": "someField"
+...         }
+...     )
+...
+>>> some_value = SomeClass(123)
+>>>
+>>> dumper = Dumper()
+>>> pprint(dumper.dump(some_value))
+{'SomeField': 123}
+>>>
+>>> dumper = Dumper(alias_field="name")
+>>> pprint(dumper.dump(some_value))
+{'someField': 123}
+>>>
+>>> dumper = Dumper(alias_field=None)
+>>> pprint(dumper.dump(some_value))
+{'some_field': 123}
+
+```
 
 ## Goals
 
