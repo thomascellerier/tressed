@@ -438,6 +438,10 @@ For example:
 >>> pprint(dumper.dump(some_value), sort_dicts=False)
 {'SomeField': 123, 'OTHER_FIELD': 'foo'}
 >>>
+>>> dumper = Dumper(alias_field="name")
+>>> pprint(dumper.dump(some_value), sort_dicts=False)
+{'someField': 123, 'other_field': 'foo'}
+>>>
 >>> dumper = Dumper(alias_field="name", alias_fn=str.upper)
 >>> pprint(dumper.dump(some_value), sort_dicts=False)
 {'someField': 123, 'OTHER_FIELD': 'foo'}
