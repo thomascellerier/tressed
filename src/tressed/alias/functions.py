@@ -29,13 +29,22 @@ def normalize_alias_fn[AliasT = Alias](
         fn = call
         code = getattr(call, "__code__", None)
 
-    if code is None:
-        raise ValueError(f"Unsupported alias function {alias_fn!r}")
+    if code is not None:
+        arg_count = code.co_argcount
+        if hasattr(fn, "__self__"):
+            # Bound method, substract the self argument
+            arg_count -= 1
 
-    arg_count = code.co_argcount
-    if hasattr(fn, "__self__"):
-        # Bound method, substract the self argument
-        arg_count -= 1
+    elif text_signature := getattr(alias_fn, "__text_signature__", None):
+        # method_descriptor text signature, for example:
+        #
+        #     >>> str.upper.__text_signature__
+        #     '($self, /)'
+        parts = text_signature[1:-1].split(", ")
+        arg_count = sum(1 for part in parts if part != "/")
+
+    else:
+        raise ValueError(f"Unsupported alias function {alias_fn!r}")
 
     match arg_count:
         case 3:
@@ -60,7 +69,7 @@ def normalize_alias_fn[AliasT = Alias](
             assert False, "unreachable"
 
 
-def to_identity(name: str) -> str:
+def to_identity(name: str) -> str:  #
     return name
 
 

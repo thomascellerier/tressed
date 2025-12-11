@@ -127,3 +127,13 @@ def test_callable_alias_fn() -> None:
 
     alias_resolver = AliasResolver(alias_fn=AliasClass("__"))
     assert alias_resolver.resolve("foobar", int, ()) == "__foobar"
+
+
+def test_method_descriptor_alias_fn() -> None:
+    from tressed.alias import AliasResolver
+
+    alias_resolver = AliasResolver(alias_fn=str.upper)
+    assert alias_resolver.resolve("foobar", int, ()) == "FOOBAR"
+
+    alias_resolver = AliasResolver(alias_fn=str.title)
+    assert alias_resolver.resolve("foobar", int, ()) == "Foobar"

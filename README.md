@@ -416,7 +416,7 @@ aliases with a user provided alias function like `to_camel`. By default it uses 
 This can be disabled by passing `alias_field=None` when instantiating a loader or dumper.
 
 For example:
-```
+```python
 >>> from dataclasses import dataclass, field
 >>> from pprint import pprint
 >>>
@@ -430,20 +430,21 @@ For example:
 ...             "name": "someField"
 ...         }
 ...     )
+...     other_field: str
 ...
->>> some_value = SomeClass(123)
+>>> some_value = SomeClass(123, "foo")
 >>>
->>> dumper = Dumper()
->>> pprint(dumper.dump(some_value))
-{'SomeField': 123}
+>>> dumper = Dumper(alias_fn=str.upper)
+>>> pprint(dumper.dump(some_value), sort_dicts=False)
+{'SomeField': 123, 'OTHER_FIELD': 'foo'}
 >>>
->>> dumper = Dumper(alias_field="name")
->>> pprint(dumper.dump(some_value))
-{'someField': 123}
+>>> dumper = Dumper(alias_field="name", alias_fn=str.upper)
+>>> pprint(dumper.dump(some_value), sort_dicts=False)
+{'someField': 123, 'OTHER_FIELD': 'foo'}
 >>>
->>> dumper = Dumper(alias_field=None)
->>> pprint(dumper.dump(some_value))
-{'some_field': 123}
+>>> dumper = Dumper(alias_field=None, alias_fn=str.upper)
+>>> pprint(dumper.dump(some_value), sort_dicts=False)
+{'SOME_FIELD': 123, 'OTHER_FIELD': 'foo'}
 
 ```
 
