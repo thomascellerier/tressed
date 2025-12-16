@@ -1,0 +1,6 @@
+site_name: Tressed
+description: Straightforward pure-python serialization
+theme: readthedocs
+repo_name: thomascellerier/tressed
+repo_url: https://github.com/thomascellerier/tressed
+edit_uri: ""

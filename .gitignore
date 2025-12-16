@@ -7,3 +7,6 @@ src/tressed.egg-info/
 
 # coverage
 .coverage
+
+# mkdocs
+site/
