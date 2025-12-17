@@ -47,6 +47,7 @@ def _default_type_mappers(specialize: bool) -> dict[TypePredicate, LoaderFn]:
         load_namedtuple,
         load_newtype,
         load_optional,
+        load_re_pattern,
         load_simple_collection,
         load_simple_scalar,
         load_tuple,
@@ -71,6 +72,7 @@ def _default_type_mappers(specialize: bool) -> dict[TypePredicate, LoaderFn]:
         is_namedtuple_type,
         is_newtype,
         is_optional_type,
+        is_re_pattern_type,
         is_type_alias_type,
         is_typeddict,
         is_union_type,
@@ -115,6 +117,7 @@ def _default_type_mappers(specialize: bool) -> dict[TypePredicate, LoaderFn]:
         is_uuid_type: load_simple_scalar,
         is_fspath_type: load_simple_scalar,
         is_datetime_type: load_datetime,
+        is_re_pattern_type: load_re_pattern,
     }
 
 
@@ -156,8 +159,8 @@ class Loader:
         from tressed.alias import (
             AliasResolver,
             compose_alias_fn,
-            to_identity,
             make_maybe_dataclass_alias_fn,
+            to_identity,
         )
 
         if alias_field:

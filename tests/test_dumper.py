@@ -88,6 +88,16 @@ def test_dump_datetime() -> None:
     )
 
 
+def test_dump_re_pattern() -> None:
+    import re
+
+    dumper = Dumper()
+
+    pattern = re.compile(r"\d+")
+    dumped = dumper.dump(pattern)
+    assert dumped == r"\d+"
+
+
 def test_dump_dataclass() -> None:
     import uuid
     from dataclasses import dataclass, field

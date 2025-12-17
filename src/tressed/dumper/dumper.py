@@ -50,6 +50,7 @@ def _default_type_mappers(specialize: bool) -> dict[TypePredicate, DumperFn]:
         dump_enum,
         dump_fspath,
         dump_namedtuple,
+        dump_re_pattern,
         dump_simple_scalar,
     )
     from tressed.predicates import (
@@ -59,6 +60,7 @@ def _default_type_mappers(specialize: bool) -> dict[TypePredicate, DumperFn]:
         is_fspath_type,
         is_ipaddress_type,
         is_namedtuple_type,
+        is_re_pattern_type,
         is_uuid_type,
     )
 
@@ -70,6 +72,7 @@ def _default_type_mappers(specialize: bool) -> dict[TypePredicate, DumperFn]:
         is_dataclass_type: dump_dataclass,
         is_namedtuple_type: dump_namedtuple,
         is_fspath_type: dump_fspath,
+        is_re_pattern_type: dump_re_pattern,
     }
 
 
@@ -112,8 +115,8 @@ class Dumper:
         from tressed.alias import (
             AliasResolver,
             compose_alias_fn,
-            to_identity,
             make_maybe_dataclass_alias_fn,
+            to_identity,
         )
 
         if alias_field:

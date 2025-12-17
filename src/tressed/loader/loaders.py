@@ -30,6 +30,7 @@ __all__ = [
     "load_union",
     "load_datetime",
     "load_discriminated_union",
+    "load_re_pattern",
 ]
 
 if TYPE_CHECKING:
@@ -349,6 +350,17 @@ def load_datetime[T](
     value: Any, type_form: TypeForm[T], type_path: TypePath, loader: LoaderProtocol
 ) -> T:
     return type_form.fromisoformat(value)  # type: ignore[attr-defined]
+
+
+def load_re_pattern[T](
+    value: Any, type_form: TypeForm[T], type_path: TypePath, loader: LoaderProtocol
+) -> T:
+    """
+    Load a regular expression pattern from a string.
+    """
+    import re
+
+    return re.compile(value)  # type: ignore[return-value]
 
 
 def load_discriminated_union[T](

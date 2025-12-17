@@ -20,6 +20,7 @@ __all__ = [
     "dump_dataclass",
     "dump_namedtuple",
     "dump_fspath",
+    "dump_re_pattern",
 ]
 
 if TYPE_CHECKING:
@@ -148,3 +149,10 @@ def dump_namedtuple(value: Any, type_path: TypePath, dumper: DumperProtocol) -> 
 
 def dump_fspath(value: Any, type_path: TypePath, dumper: DumperProtocol) -> Dumped:
     return os.fspath(value)
+
+
+def dump_re_pattern(value: Any, type_path: TypePath, dumper: DumperProtocol) -> Dumped:
+    """
+    Dump a regular expression pattern to its string representation.
+    """
+    return value.pattern

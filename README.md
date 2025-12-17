@@ -127,6 +127,7 @@ The following type forms are supported out of the box:
 - `uuid.UUID`
 - `pathlib.Path`
 - `datetime.{date,datetime,time}` (ISO 8601 format, using `datetime.{date,datetime,time}.fromisoformat`)
+- `re.Pattern` (regular expression patterns, using `re.compile`)
 
 It is easy to add support for custom types as needed when creating a loader.
 

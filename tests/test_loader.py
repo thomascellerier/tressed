@@ -823,6 +823,20 @@ def test_load_datetime() -> None:
     )
 
 
+def test_load_re_pattern() -> None:
+    import re
+
+    loader = Loader()
+
+    pattern = loader.load(r"(\d+)", re.Pattern)
+    assert_type(pattern, re.Pattern)
+    assert pattern.pattern == r"(\d+)"
+    m = pattern.match("123")
+    assert m is not None
+    assert m.group(1) == "123"
+    assert pattern.match("abc") is None
+
+
 def test_load_discriminated_union_first_match() -> None:
     from typing import Annotated, Literal, NamedTuple, get_args, get_type_hints
 

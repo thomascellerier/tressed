@@ -55,6 +55,7 @@ __all__ = [
     "is_fspath_type",
     "is_datetime_type",
     "is_discriminated_union",
+    "is_re_pattern_type",
 ]
 
 if TYPE_CHECKING:
@@ -325,4 +326,13 @@ def is_discriminated_union(type_form: TypeForm) -> bool:
             if isinstance(metadata, discriminated_union.Discriminator)
         )
         return num_discriminators == 1
+    return False
+
+
+def is_re_pattern_type(type_form: TypeForm) -> bool:
+    """
+    Check if the type form is a compiled regular expression pattern (re.Pattern).
+    """
+    if re_module := sys.modules.get("re"):
+        return type_form is re_module.Pattern
     return False
