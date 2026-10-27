@@ -2,11 +2,11 @@ __all__ = [
     "Alias",
     "AliasFn",
     "AliasResolver",
-    "to_identity",
-    "to_camel",
-    "to_pascal",
     "compose_alias_fn",
     "make_maybe_dataclass_alias_fn",
+    "to_camel",
+    "to_identity",
+    "to_pascal",
 ]
 
 TYPE_CHECKING = False

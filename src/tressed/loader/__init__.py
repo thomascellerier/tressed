@@ -3,7 +3,7 @@ if TYPE_CHECKING:
     from tressed.loader.loader import Loader
     from tressed.loader.types import LoaderFn, LoaderProtocol
 
-__all__ = ["Loader", "LoaderProtocol", "LoaderFn"]
+__all__ = ["Loader", "LoaderFn", "LoaderProtocol"]
 
 
 if not TYPE_CHECKING:

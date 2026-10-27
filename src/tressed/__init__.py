@@ -6,7 +6,7 @@ if TYPE_CHECKING:
     from tressed.type_path import TypePath
 
 
-__all__ = ["Loader", "Dumper", "load", "dump", "TypeForm", "TypePath"]
+__all__ = ["Dumper", "Loader", "TypeForm", "TypePath", "dump", "load"]
 
 
 if TYPE_CHECKING:

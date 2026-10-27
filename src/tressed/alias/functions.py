@@ -7,11 +7,11 @@ if TYPE_CHECKING:
     from tressed.type_path import TypePath
 
 __all__ = [
-    "normalize_alias_fn",
-    "make_maybe_dataclass_alias_fn",
     "compose_alias_fn",
-    "to_identity",
+    "make_maybe_dataclass_alias_fn",
+    "normalize_alias_fn",
     "to_camel",
+    "to_identity",
     "to_pascal",
 ]
 
@@ -25,7 +25,7 @@ def normalize_alias_fn[AliasT = Alias](
     # Avoid importing heavy inspect module, do some manual introspection
     if code := getattr(alias_fn, "__code__", None):
         fn = alias_fn
-    elif call := getattr(alias_fn, "__call__", None):
+    elif call := getattr(alias_fn, "__call__", None):  # noqa: B004
         fn = call
         code = getattr(call, "__code__", None)
 
@@ -69,7 +69,7 @@ def normalize_alias_fn[AliasT = Alias](
             assert False, "unreachable"
 
 
-def to_identity(name: str) -> str:  #
+def to_identity(name: str) -> str:
     return name
 
 

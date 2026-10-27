@@ -42,10 +42,10 @@ def test_load_float() -> None:
 def test_load_complex() -> None:
     loader = Loader()
 
-    loader.load([1.1, 2.2], complex) == 1.1 + 2.2j
-    loader.load([1, 2.2], complex) == 1 + 2.2j
-    loader.load([1.1, 2], complex) == 1.1 + 2j
-    loader.load([1, 2], complex) == 1 + 2j
+    assert loader.load([1.1, 2.2], complex) == 1.1 + 2.2j
+    assert loader.load([1, 2.2], complex) == 1 + 2.2j
+    assert loader.load([1.1, 2], complex) == 1.1 + 2j
+    assert loader.load([1, 2], complex) == 1 + 2j
 
 
 def test_load_list() -> None:
@@ -271,7 +271,7 @@ def test_load_custom_type() -> None:
         def __repr__(self) -> str:
             return f"{self.__class__.__name__}(value={self.value})"
 
-        def __eq__(self, other: Any) -> bool:
+        def __eq__(self, other: object) -> bool:
             return type(other) is type(self) and other.value == self.value
 
     def _load_custom_type_double(
@@ -313,9 +313,9 @@ def test_barebones_loader() -> None:
     loader = Loader(
         default_type_handlers={float: _load_float_times_five},
         default_type_mappers={
-            lambda tf: tf in (UpperStr, LowerStr): lambda v, tf, __, ___: v.upper()
-            if tf is UpperStr
-            else v.lower(),
+            lambda tf: tf in (UpperStr, LowerStr): lambda v, tf, __, ___: (
+                v.upper() if tf is UpperStr else v.lower()
+            ),
         },
     )
 
@@ -692,7 +692,7 @@ def test_load_generic_type_alias() -> None:
     assert loader.load(("yes", "no"), StrPair) == ("yes", "no")
 
     with pytest.raises(TressedValueError) as exc_info:
-        loader.load((1, 0), Pair) == (1, 0)
+        loader.load((1, 0), Pair)
     assert str(exc_info.value) == (
         "Failed to load value of type tuple at path . into type form Pair[T=?]: "
         "type form should have only concrete type parameters"
@@ -738,7 +738,7 @@ def test_load_optional_legacy() -> None:
     # typing.Optional[T]
     assert loader.load(1, Optional[int]) == 1
     assert loader.load(None, Optional[int]) is None
-    assert loader.load(None, Optional[None]) is None
+    assert loader.load(None, Optional[None]) is None  # noqa: PYI016
     with pytest.raises(TressedValueError):
         assert loader.load("foo", Optional[int])
 
@@ -747,7 +747,7 @@ def test_load_optional_legacy() -> None:
     assert loader.load(None, Union[int, None]) is None
     assert loader.load(1, Union[None, int]) == 1
     assert loader.load(None, Union[None, int]) is None
-    assert loader.load(None, Union[None, None]) is None
+    assert loader.load(None, Union[None, None]) is None  # noqa: PYI016
     with pytest.raises(TressedValueError):
         assert loader.load("foo", Union[int, None])
 

@@ -213,7 +213,7 @@ def test_barebones_dumper() -> None:
     assert dumper.dump(("oo", "bar", "baz")) == 3
 
     with pytest.raises(TressedTypeError) as exc_info:
-        dumper.dump(10.6) == "Unhandled type float at path . for value 10.6"
+        assert dumper.dump(10.6) == "Unhandled type float at path . for value 10.6"
 
     with pytest.raises(TressedTypeError) as exc_info:
         dumper.dump("foo")

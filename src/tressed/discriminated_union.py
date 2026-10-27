@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 
 class Discriminator:
-    __slots__ = ("match_fn", "strategy", "match")
+    __slots__ = ("match", "match_fn", "strategy")
 
     def __init__(
         self,
@@ -64,7 +64,7 @@ class Discriminator:
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.match_fn=!r})"
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         return type(self) is type(other) and self.match == other.match_fn
 
     def __hash__(self) -> int:

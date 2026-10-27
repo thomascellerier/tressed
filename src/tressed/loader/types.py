@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     type TypeLoaderSpecializer[T] = Callable[[TypeForm[T], TypePath], str | None]
 
     __all__ += [
-        "LoaderProtocol",
         "LoaderFn",
+        "LoaderProtocol",
         "TypeLoaderSpecializer",
     ]

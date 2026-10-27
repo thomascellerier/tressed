@@ -7,10 +7,10 @@ if TYPE_CHECKING:
 
 __all__ = [
     "Alias",
+    "AliasFn",
     "SimpleAliasFn",
     "TypeFormAliasFn",
     "TypePathAliasFn",
-    "AliasFn",
 ]
 
 type Alias = str

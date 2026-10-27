@@ -13,24 +13,24 @@ if TYPE_CHECKING:
     from tressed.type_form import TypeForm
 
 __all__ = [
-    "load_identity",
-    "load_simple_scalar",
-    "load_float",
     "load_complex",
-    "load_dict",
-    "load_simple_collection",
-    "load_tuple",
     "load_dataclass",
-    "load_newtype",
-    "load_typeddict",
-    "load_namedtuple",
-    "load_literal",
-    "load_type_alias",
-    "load_optional",
-    "load_union",
     "load_datetime",
+    "load_dict",
     "load_discriminated_union",
+    "load_float",
+    "load_identity",
+    "load_literal",
+    "load_namedtuple",
+    "load_newtype",
+    "load_optional",
     "load_re_pattern",
+    "load_simple_collection",
+    "load_simple_scalar",
+    "load_tuple",
+    "load_type_alias",
+    "load_typeddict",
+    "load_union",
 ]
 
 if TYPE_CHECKING:
@@ -193,17 +193,21 @@ def load_dataclass[T](
 def load_newtype[T: TypeForm](
     value: Any, type_form: T, type_path: TypePath, loader: LoaderProtocol
 ) -> T:
-    supertype = getattr(type_form, "__supertype__")
+    supertype = type_form.__supertype__
     return loader._load(value, supertype, type_path)
 
 
 def _is_extra_items_sentinel(value: Any) -> bool:
-    if (typing := sys.modules.get("typing")) and hasattr(typing, "NoExtraItems"):
-        if value is getattr(typing, "NoExtraItems"):
-            return True
-    if typing_extensions := sys.modules.get("typing_extensions"):
-        if value is typing_extensions.NoExtraItems:
-            return True
+    if (
+        (typing := sys.modules.get("typing"))
+        and hasattr(typing, "NoExtraItems")
+        and value is typing.NoExtraItems
+    ):
+        return True
+    if (
+        typing_extensions := sys.modules.get("typing_extensions")
+    ) and value is typing_extensions.NoExtraItems:
+        return True
     return False
 
 
@@ -211,8 +215,8 @@ def load_typeddict[T](
     value: Any, type_form: TypeForm[T], type_path: TypePath, loader: LoaderProtocol
 ) -> T:
     values: dict[str, Any] = {}
-    required_keys = getattr(type_form, "__required_keys__")
-    optional_keys = getattr(type_form, "__optional_keys__")
+    required_keys = getattr(type_form, "__required_keys__")  # noqa: B009
+    optional_keys = getattr(type_form, "__optional_keys__")  # noqa: B009
     valid_keys = required_keys | optional_keys
 
     closed = getattr(type_form, "__closed__", None)
@@ -229,12 +233,11 @@ def load_typeddict[T](
                 )
                 continue
 
-        elif closed:
-            if item_key not in valid_keys:
-                if extra_keys is None:
-                    extra_keys = set()
-                extra_keys.add(item_key)
-                continue
+        elif closed and item_key not in valid_keys:
+            if extra_keys is None:
+                extra_keys = set()
+            extra_keys.add(item_key)
+            continue
 
         values[item_key] = item_value
 
@@ -281,7 +284,7 @@ def load_literal[T](
         value,
         type_form,
         type_path,
-        f"got value {repr(value)} but expected one of: {', '.join(map(repr, args))}",
+        f"got value {value!r} but expected one of: {', '.join(map(repr, args))}",
     )
 
 

@@ -27,38 +27,37 @@ But instead:
 
 import sys
 
+__all__ = [
+    "get_args",
+    "get_origin",
+    "is_dataclass_type",
+    "is_datetime_type",
+    "is_dict_type",
+    "is_discriminated_union",
+    "is_enum_type",
+    "is_fspath_type",
+    "is_generic_frozenset_type",
+    "is_generic_homogeneous_tuple_type",
+    "is_generic_list_type",
+    "is_generic_set_type",
+    "is_generic_tuple_type",
+    "is_literal_type",
+    "is_namedtuple_type",
+    "is_newtype",
+    "is_optional_type",
+    "is_re_pattern_type",
+    "is_type_alias_type",
+    "is_typeddict",
+    "is_union_type",
+    "is_uuid_type",
+]
+
 TYPE_CHECKING = False
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from tressed.type_form import TypeForm
+    from tressed.type_form import TypeForm  # noqa: TC004
 
-__all__ = [
-    "get_origin",
-    "get_args",
-    "is_generic_tuple_type",
-    "is_generic_homogeneous_tuple_type",
-    "is_generic_list_type",
-    "is_generic_set_type",
-    "is_generic_frozenset_type",
-    "is_dataclass_type",
-    "is_newtype",
-    "is_typeddict",
-    "is_dict_type",
-    "is_namedtuple_type",
-    "is_uuid_type",
-    "is_enum_type",
-    "is_literal_type",
-    "is_type_alias_type",
-    "is_optional_type",
-    "is_union_type",
-    "is_fspath_type",
-    "is_datetime_type",
-    "is_discriminated_union",
-    "is_re_pattern_type",
-]
-
-if TYPE_CHECKING:
     type TypePredicate[T: TypeForm] = Callable[[T], bool]
 
     __all__ += [
@@ -171,17 +170,10 @@ def is_dataclass_type(type_form: TypeForm) -> bool:
     return False
 
 
-if sys.version_info >= (3, 10):
-
-    def is_newtype(type_form: TypeForm) -> bool:
-        if typing := sys.modules.get("typing"):
-            return type(type_form) is typing.NewType
-        return False
-else:
-    # NewType used to be a function, the only way to identify it
-    # was to check for the __supertype__ attribute.
-    def is_newtype(type_form: TypeForm) -> bool:
-        return hasattr(type_form, "__supertype__")
+def is_newtype(type_form: TypeForm) -> bool:
+    if typing := sys.modules.get("typing"):
+        return type(type_form) is typing.NewType
+    return False
 
 
 def is_ipaddress_type(type_form: TypeForm) -> bool:
@@ -198,22 +190,18 @@ def is_ipaddress_type(type_form: TypeForm) -> bool:
 
 
 def is_typeddict(type_form: TypeForm) -> bool:
-    if typing := sys.modules.get("typing"):
-        if typing.is_typeddict(type_form):
-            return True
-    if typing_extensions := sys.modules.get("typing_extensions"):
-        if typing_extensions.is_typeddict(type_form):
-            return True
-    return False
+    if (typing := sys.modules.get("typing")) and typing.is_typeddict(type_form):
+        return True
+    return (
+        typing_extensions := sys.modules.get("typing_extensions")
+    ) is not None and typing_extensions.is_typeddict(type_form)
 
 
 def is_dict_type(type_form: TypeForm) -> bool:
     origin = get_origin(type_form)
-    if origin is dict:
-        return True
-    elif (typing := sys.modules.get("typing")) and origin is typing.Dict:
-        return True
-    return False
+    return origin is dict or (
+        (typing := sys.modules.get("typing")) is not None and origin is typing.Dict
+    )
 
 
 def is_namedtuple_type(type_form: TypeForm) -> bool:

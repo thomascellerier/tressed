@@ -5,7 +5,7 @@ if TYPE_CHECKING:
 
     from tressed.type_path import TypePath
 
-__all__ = ["Dumped", "DumperProtocol", "DumperFn"]
+__all__ = ["Dumped", "DumperFn", "DumperProtocol"]
 
 
 # Dumped type, representing types that can be serialized to json out of the box.

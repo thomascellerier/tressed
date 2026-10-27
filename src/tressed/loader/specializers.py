@@ -8,13 +8,13 @@ if TYPE_CHECKING:
     from tressed.type_path import TypePath, TypePathItem
 
 __all__ = [
-    "specialize_load_tuple",
     "specialize_load_simple_collection",
+    "specialize_load_tuple",
 ]
 
 
 class Codegen:
-    __slots__ = ("fn_name", "indent", "_parts", "_cached_code")
+    __slots__ = ("_cached_code", "_parts", "fn_name", "indent")
 
     def __init__(self, fn_name: str = "__specialized_fn") -> None:
         self.fn_name: Final = fn_name
@@ -43,7 +43,7 @@ class Codegen:
         # NOTE: This relies on the source being executed being only trusted and validated inputs.
         globals_: dict[str, Any] = {}
         locals_: dict[str, Any] = {}
-        exec(self.code(), globals_, locals_)
+        exec(self.code(), globals_, locals_)  # noqa: S102
         return locals_[self.fn_name]
 
     def _emit(self, part: str) -> None:

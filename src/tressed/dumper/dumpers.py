@@ -1,26 +1,27 @@
 import os
 import sys
 
+from tressed.exceptions import TressedValueError
+
 TYPE_CHECKING = False
 if TYPE_CHECKING:
     from typing import Any
 
     from tressed.dumper.types import Dumped, DumperProtocol
-    from tressed.exceptions import TressedValueError
     from tressed.type_path import TypePath
 
 __all__ = [
+    "dump_complex",
+    "dump_dataclass",
+    "dump_datetime",
+    "dump_enum",
+    "dump_fspath",
     "dump_identity",
-    "dump_simple_sequence",
+    "dump_namedtuple",
+    "dump_re_pattern",
     "dump_simple_mapping",
     "dump_simple_scalar",
-    "dump_complex",
-    "dump_enum",
-    "dump_datetime",
-    "dump_dataclass",
-    "dump_namedtuple",
-    "dump_fspath",
-    "dump_re_pattern",
+    "dump_simple_sequence",
 ]
 
 if TYPE_CHECKING:
@@ -135,12 +136,13 @@ def dump_namedtuple(value: Any, type_path: TypePath, dumper: DumperProtocol) -> 
     for field_name in value._fields:
         field_value = getattr(value, field_name)
 
-        if dumper.hide_defaults:
-            if (
-                field_default := value._field_defaults.get(field_name, _MISSING)
-            ) is not _MISSING:
-                if field_value == field_default:
-                    continue
+        if (
+            dumper.hide_defaults
+            and (field_default := value._field_defaults.get(field_name, _MISSING))
+            is not _MISSING
+            and field_value == field_default
+        ):
+            continue
 
         alias = dumper._resolve_alias(type(value), type_path, field_name)
         dumped[alias] = dumper._dump(field_value, (*type_path, alias))

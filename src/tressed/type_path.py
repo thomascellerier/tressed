@@ -1,6 +1,6 @@
 __all__ = [
-    "TypePathItem",
     "TypePath",
+    "TypePathItem",
     "type_path_repr",
 ]
 

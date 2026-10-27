@@ -3,7 +3,7 @@ if TYPE_CHECKING:
     from tressed.dumper.dumper import Dumper
     from tressed.dumper.types import Dumped, DumperFn, DumperProtocol
 
-__all__ = ["Dumper", "Dumped", "DumperProtocol", "DumperFn"]
+__all__ = ["Dumped", "Dumper", "DumperFn", "DumperProtocol"]
 
 
 if not TYPE_CHECKING:

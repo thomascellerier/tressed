@@ -29,7 +29,7 @@ class SpecializingLoader:
     ) -> T:
         key = (type_form, type_path)
         specialized_loader = self._specialized_loaders.get(key)
-        if type(specialized_loader) is type(None) or type(specialized_loader) is int:
+        if (specialized_loader is None) or type(specialized_loader) is int:
             if type(specialized_loader) is int and specialized_loader > 0:
                 count = specialized_loader + 1
             else:
@@ -47,7 +47,7 @@ class SpecializingLoader:
                     globals_: dict[str, Any] = {}
                     locals_: dict[str, Any] = {}
 
-                    exec(specializer_fn_code, globals_, locals_)
+                    exec(specializer_fn_code, globals_, locals_)  # noqa: S102
 
                     specialized_loader = locals_["__specialized_fn"]
                     self._specialized_loaders[key] = specialized_loader
