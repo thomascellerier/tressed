@@ -28,7 +28,7 @@ ty-check:
 
 .PHONY: mypy
 mypy:
-	uv run mypy --enable-incomplete-feature=TypeForm
+	uv run mypy
 
 .PHONY: lint
 lint: mypy ruff-check check-fmt

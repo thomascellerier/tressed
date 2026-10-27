@@ -143,13 +143,13 @@ def test_load_homogeneous_tuple_legacy() -> None:
     from typing import Tuple
 
     loader = Loader()
-    assert loader.load([1, 2, 3], Tuple[int, ...]) == (1, 2, 3)  # type: ignore[arg-type]
+    assert loader.load([1, 2, 3], Tuple[int, ...]) == (1, 2, 3)
 
     with pytest.raises(TressedTypeFormError):
         loader.load(["foo", "bar"], Tuple)
 
     with pytest.raises(TressedValueError):
-        loader.load(["foo", "bar"], Tuple[int, ...])  # type: ignore[arg-type]
+        loader.load(["foo", "bar"], Tuple[int, ...])
 
 
 def test_load_tuple() -> None:
@@ -167,13 +167,13 @@ def test_load_tuple_legacy() -> None:
     from typing import Tuple
 
     loader = Loader()
-    assert loader.load([], Tuple[()]) == ()  # type: ignore[arg-type]
-    assert loader.load([1], Tuple[int]) == (1,)  # type: ignore[arg-type]
-    assert loader.load([1, True], Tuple[int, bool]) == (1, True)  # type: ignore[arg-type]
-    assert loader.load([1, True, 1.1], Tuple[int, bool, float]) == (1, True, 1.1)  # type: ignore[arg-type]
+    assert loader.load([], Tuple[()]) == ()
+    assert loader.load([1], Tuple[int]) == (1,)
+    assert loader.load([1, True], Tuple[int, bool]) == (1, True)
+    assert loader.load([1, True, 1.1], Tuple[int, bool, float]) == (1, True, 1.1)
 
     with pytest.raises(TressedValueError):
-        loader.load([1, True, "foo"], Tuple[int, bool, float])  # type: ignore[arg-type]
+        loader.load([1, True, "foo"], Tuple[int, bool, float])
 
 
 def test_load_newtype() -> None:
@@ -538,7 +538,7 @@ def test_load_typeddict_closed() -> None:
 
     loader = Loader()
 
-    class SomeTypedDict(TypedDict, closed=True):  # type: ignore[call-arg]
+    class SomeTypedDict(TypedDict, closed=True):
         foo: int
 
     with pytest.raises(TressedValueError) as exc_info:
