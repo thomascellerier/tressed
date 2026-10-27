@@ -35,3 +35,15 @@ lint: mypy ruff-check check-fmt
 
 .PHONY: test
 test: lint pytest
+
+.PHONY: build
+build:
+	uv build
+
+.PHONY: publish
+publish:
+	uv publish
+
+.PHONY: clean
+clean:
+	$(RM) -r dist/
