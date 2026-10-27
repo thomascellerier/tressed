@@ -26,6 +26,10 @@ dev = [
     "ty>=0.0.1a28",
 ]
 
+[build-system]
+requires = ["uv_build>=0.13.6,<0.14"]
+build-backend = "uv_build"
+
 [tool.uv.build-backend]
 module-name = "tressed"
 module-root = "src"
